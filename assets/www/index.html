@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Game of the Generals</title>
+		<script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+		<script type="text/javascript">
+			function loadImages() {
+				
+			}
+			
+			function onDeviceReady() {
+				loadImages();
+// 				$("#gamewindow").html(window.innerWidth+" "+window.innerHeight);
+			}
+			
+			function init() {
+				document.addEventListener("deviceready", onDeviceReady, false);
+			}
+		</script>
+		<style media="screen" type="text/css">
+			body {
+				margin: 0px;
+				padding: 0px;
+				background: white;
+			}
+		</style>
+	</head>
+	<body onLoad="init()">
+		<div id="gamewindow">
+		
+		</div>
+	</body>
+</html>
