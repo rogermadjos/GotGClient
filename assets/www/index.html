@@ -6,30 +6,210 @@
 		<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
 		<script type="text/javascript">
-			function loadImages() {
-				
+		var pieceSize;
+		var pieceState = new Array();
+		var pieces = 
+		[
+				"spy.png",
+				"5-star.png",
+				"4-star.png",
+				"3-star.png",
+				"2-star.png",
+				"1-star.png",
+				"colonel.png",
+				"leutenantcolonel.png",
+				"major.png",
+				"captain.png",
+				"firstleutenant.png",
+				"secondleutenant.png",
+				"sergeant.png",
+				"private.png",
+				"flag.png"
+		];
+		
+		function setTilePiece(coor,rank) {
+			$("#"+coor).html("");
+			var html = "<div class='piece' style='height:"+
+				pieceSize+"px'><image src='images/"+pieces[rank]+"' width='"+
+				pieceSize+"' height='"+pieceSize+"'/>"+
+				"<input type='hidden' name='coordinate' value='"+coor+"'/>"+
+				"<input type='hidden' name='rank'value='"+rank+"'/></div>";
+ 			$("#"+coor).html(html);
+		}
+
+		function boardStartConfig() {
+			//random
+			var charset = "abcdefghi";
+			var coor = new Array();
+			var index = 0;
+			for(var x=0;x<9;x++) {
+				for(var y=1;y<=3;y++) {
+					var c = charset.charAt(x)+""+y;
+					coor[index++] = c;
+				}
 			}
-			
-			function onDeviceReady() {
-				loadImages();
-// 				$("#gamewindow").html(window.innerWidth+" "+window.innerHeight);
+			var sel = new Array();
+			var front = 0;
+			var count = 0;
+			while(count < 21) {
+				var index = Math.floor(Math.random()*coor.length);
+				var str = coor.splice(index,1)+"";
+				if(str.charAt(1) == '3') {
+					front++;
+					if(front >= 4) {
+						continue;
+					}
+				}
+				sel[count] = str;
+				count++;
 			}
-			
-			function init() {
-				document.addEventListener("deviceready", onDeviceReady, false);
+			setTilePiece(sel[0],0);
+			setTilePiece(sel[1],0);
+			for(var i=2;i<14;i++) {
+				setTilePiece(sel[i],i-1);
 			}
+			for(var i=14;i<20;i++) {
+				setTilePiece(sel[i],13);
+			}
+			setTilePiece(sel[20],14);
+		}
+		
+		function initGameBoard() {
+			$("#board").css("height",(window.innerWidth * 8/9) + "px");
+ 			$(".row").css("height",(window.innerWidth / 9) + "px");
+ 			boardStartConfig();
+		}
+		
+		function onDeviceReady() {
+			pieceSize = window.innerWidth/9 - 2;
+			initGameBoard();
+		}
+		
+		function init() {
+			document.addEventListener("deviceready", onDeviceReady, false);
+		}
 		</script>
 		<style media="screen" type="text/css">
-			body {
-				margin: 0px;
-				padding: 0px;
-				background: white;
-			}
+		body {
+			margin: 0px;
+			padding: 0px;
+			background: white;
+		}
+		.tile {
+			border: 0px;
+			background: black;
+			padding: 0px;
+			margin: 0px;
+			overflow: hidden;
+		}
+		#board {
+			width: 100%;
+			background: green;
+			table-layout: fixed;
+		}
+		.piece {
+			padding: 0px;
+			margin: 0px;
+			overflow: hidden;
+		}
+		.row {
+			
+			padding: 0px;
+		}
 		</style>
 	</head>
 	<body onLoad="init()">
-		<div id="gamewindow">
-		
+		<div id='gamewindow'>
+			<table id='board'>
+				<tr class='row'>
+					<td id='a8' class="tile">
+					<td id='b8' class="tile">
+					<td id='c8' class="tile">
+					<td id='d8' class="tile">
+					<td id='e8' class="tile">
+					<td id='f8' class="tile">
+					<td id='g8' class="tile">
+					<td id='h8' class="tile">
+					<td id='i8' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a7' class="tile">
+					<td id='b7' class="tile">
+					<td id='c7' class="tile">
+					<td id='d7' class="tile">
+					<td id='e7' class="tile">
+					<td id='f7' class="tile">
+					<td id='g7' class="tile">
+					<td id='h7' class="tile">
+					<td id='i7' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a6' class="tile">
+					<td id='b6' class="tile">
+					<td id='c6' class="tile">
+					<td id='d6' class="tile">
+					<td id='e6' class="tile">
+					<td id='f6' class="tile">
+					<td id='g6' class="tile">
+					<td id='h6' class="tile">
+					<td id='i6' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a5' class="tile">
+					<td id='b5' class="tile">
+					<td id='c5' class="tile">
+					<td id='d5' class="tile">
+					<td id='e5' class="tile">
+					<td id='f5' class="tile">
+					<td id='g5' class="tile">
+					<td id='h5' class="tile">
+					<td id='i5' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a4' class="tile">
+					<td id='b4' class="tile">
+					<td id='c4' class="tile">
+					<td id='d4' class="tile">
+					<td id='e4' class="tile">
+					<td id='f4' class="tile">
+					<td id='g4' class="tile">
+					<td id='h4' class="tile">
+					<td id='i4' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a3' class="tile">
+					<td id='b3' class="tile">
+					<td id='c3' class="tile">
+					<td id='d3' class="tile">
+					<td id='e3' class="tile">
+					<td id='f3' class="tile">
+					<td id='g3' class="tile">
+					<td id='h3' class="tile">
+					<td id='i3' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a2' class="tile">
+					<td id='b2' class="tile">
+					<td id='c2' class="tile">
+					<td id='d2' class="tile">
+					<td id='e2' class="tile">
+					<td id='f2' class="tile">
+					<td id='g2' class="tile">
+					<td id='h2' class="tile">
+					<td id='i2' class="tile">
+				</tr>
+				<tr class='row'>
+					<td id='a1' class="tile">
+					<td id='b1' class="tile">
+					<td id='c1' class="tile">
+					<td id='d1' class="tile">
+					<td id='e1' class="tile">
+					<td id='f1' class="tile">
+					<td id='g1' class="tile">
+					<td id='h1' class="tile">
+					<td id='i1' class="tile">
+				</tr>
+			</table>
 		</div>
 	</body>
 </html>
