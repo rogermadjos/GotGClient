@@ -27,14 +27,31 @@
 				"flag.png"
 		];
 		
+		var dirImg = ["right.png","left.png","up.png","down.png"];
+		var selection = "";
+		
+		
+		function loadImages() {
+			for(var i=0;i<pieces.length;i++) {
+				var img = new Image();
+				img.src = "images/"+pieces[i];
+			}
+			for(var i=0;i<dirImg.length;i++) {
+				var img = new Image();
+				img.src = "images/"+dirImg[i];
+			}
+		}
+		
 		function setTilePiece(coor,rank) {
-			$("#"+coor).html("");
+			var tile = $("#"+coor);
+			tile.html("");
 			var html = "<div class='piece' style='height:"+
 				pieceSize+"px'><image src='images/"+pieces[rank]+"' width='"+
 				pieceSize+"' height='"+pieceSize+"'/>"+
 				"<input type='hidden' name='coordinate' value='"+coor+"'/>"+
 				"<input type='hidden' name='rank' value='"+rank+"'/></div>";
- 			$("#"+coor).html(html);
+			tile.html(html);
+			tile.addClass("occupied");
 		}
 
 		function boardStartConfig() {
@@ -90,13 +107,54 @@
  			$(".row").css("height",(window.innerWidth / 9) + "px");
  			boardStartConfig();
  			$(".tile").on("click",function() {
- 				if($(this).html() == "")
+				$(".highlight").remove();
+ 				if($(this).html() == "") {
+ 					$(".arrow").remove();
  					return;
+ 				}
+ 				if(!$(this).hasClass("occupied")) {
+ 					$(".arrow").remove();
+ 					var sel = $("#"+selection);
+ 					var coor = $(this).attr("id");
+ 	 				var rank = sel.find("input[name='rank']").attr("value");
+ 					sel.html("");
+ 					sel.removeClass("occupied");
+ 					setTilePiece(coor,rank);
+ 					return;
+ 				}
+ 				$(".arrow").remove();
  				var coor = $(this).find("input[name='coordinate']").attr("value");
  				var rank = $(this).find("input[name='rank']").attr("value");
- 				$(".highlight").remove();
+ 				selection = coor;
  				$(this).append("<div class='highlight' style='margin-top:-"+pieceSize+"px;height:"+pieceSize+"px'><image src='images/highlight.png' width='"+pieceSize+"' height='"+pieceSize+"'/></div>");
- 				console.log(coor+" "+rank);
+ 				var x = charSet.indexOf(coor.charAt(0));
+ 				var y = parseInt(coor.charAt(1))-1;
+ 				var vmoves = new Array();
+ 				var index = 0;
+ 				if(x+1 < 9) {
+ 					vmoves[index++] = "r"+charSet.charAt(x+1)+(y+1);
+ 				}
+ 				if(x-1 >= 0) {
+ 					vmoves[index++] = "l"+charSet.charAt(x-1) +""+(y+1);
+ 				}
+ 				if(y+1 < 8) {
+ 					vmoves[index++] = "u"+charSet.charAt(x) +""+(y+2);
+ 				}
+ 				if(y-1 >=0) {
+ 					vmoves[index++] = "d"+charSet.charAt(x) +""+(y);
+ 				}
+ 				var dirSet = "rlud";
+ 				for(var i=0;i<vmoves.length;i++) {
+ 					var info = vmoves[i];
+ 					var dir = info.charAt(0);
+ 					dir = dirImg[dirSet.indexOf(dir)];
+ 					info = info.charAt(1)+""+info.charAt(2);
+ 					var tile = $("#"+info);
+  					if(!tile.hasClass("occupied")) {
+ 						tile.html("<div class='arrow' style='height:"+pieceSize+"px'><image src='images/"+dir+"' width='"+pieceSize+"' height='"+pieceSize+"'/></div>");
+  					}
+ 				}
+// 				console.log(coor+" "+rank+" "+x+" "+y+" "+vmoves);
  			});
 		}
 		
