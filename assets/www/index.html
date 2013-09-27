@@ -4,8 +4,10 @@
 		<title>Game of the Generals</title>
 		<script type="text/javascript" src="cordova.js"></script>
 		<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+		<script type="text/javascript" src="http://192.168.1.3/socket.io/socket.io.js"></script>
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
 		<script type="text/javascript">
+		var socket;
 		var pieceSize;
 		var pieceState = new Array();
 		var pieces = 
@@ -90,7 +92,7 @@
 			}
 			setTilePiece(sel[20],14);
 		}
-		
+
 		function initGameBoard() {
 			var board = $("#board");
 			board.css("height",(window.innerWidth * 8/9) + "px");
@@ -154,8 +156,12 @@
  						tile.html("<div class='arrow' style='height:"+pieceSize+"px'><image src='images/"+dir+"' width='"+pieceSize+"' height='"+pieceSize+"'/></div>");
   					}
  				}
-// 				console.log(coor+" "+rank+" "+x+" "+y+" "+vmoves);
  			});
+			
+			socket.on('news', function (data) {
+				console.log(data);
+				socket.emit('my other event', { my: 'data' });
+			});
 		}
 		
 		function onDeviceReady() {
@@ -165,41 +171,89 @@
 		
 		function init() {
 			document.addEventListener("deviceready", onDeviceReady, false);
+			socket = io.connect('http://192.168.1.3');
+			var user = 'botmind';
+			var pass = 'ken_0121';
+			socket.emit('auth', { username: user , password: pass});
 		}
+
 		</script>
 		<style media="screen" type="text/css">
-		body {
-			margin: 0px;
-			padding: 0px;
-			background: white;
+ 		body {
+ 			margin: 0px;
+ 			padding: 0px;
+ 			background: white;
+ 		}
+ 		button, td {
+ 			-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
+ 		}
+ 		.tile {
+ 			border: 0px;
+ 			background: black;
+ 			padding: 0px;
+ 			margin: 0px;
+ 			overflow: hidden;
+ 		}
+ 		#board {
+ 			width: 100%;
+ 			background: green;
+ 			table-layout: fixed;
+ 		}
+ 		.piece {
+ 			padding: 0px;
+ 			margin: 0px;
+ 			overflow: hidden;
+ 		}
+ 		.row {
+ 			padding: 0px;
+ 		}
+ 		.buttonone {
+ 			border-width: 0px;
+			-moz-box-shadow:inset 2px 2px 5px 1px #c1ed9c;
+			-webkit-box-shadow:inset 2px 2px 5px 1px #c1ed9c;
+			box-shadow:inset 2px 2px 5px 1px #c1ed9c;
+			background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #9dce2c), color-stop(1, #8cb82b) );
+			background:-moz-linear-gradient( center top, #9dce2c 5%, #8cb82b 100% );
+			filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#9dce2c', endColorstr='#8cb82b');
+			background-color:#9dce2c;
+			-webkit-border-top-left-radius:15px;
+			-moz-border-radius-topleft:15px;
+			border-top-left-radius:15px;
+			-webkit-border-top-right-radius:15px;
+			-moz-border-radius-topright:15px;
+			border-top-right-radius:15px;
+			-webkit-border-bottom-right-radius:15px;
+			-moz-border-radius-bottomright:15px;
+			border-bottom-right-radius:15px;
+			-webkit-border-bottom-left-radius:15px;
+			-moz-border-radius-bottomleft:15px;
+			border-bottom-left-radius:15px;
+			text-indent:0px;
+			display:inline-block;
+			color:#ffffff;
+			font-family:Arial;
+			font-size:15px;
+			font-weight:bold;
+			font-style:normal;
+			height:50px;
+			line-height:33px;
+			width:140px;
+			text-decoration:none;
+			text-align:center;
+			text-shadow:2px 2px 2px #689324;
 		}
-		button, td {
-			-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
-		}
-		.tile {
-			border: 0px;
-			background: black;
-			padding: 0px;
-			margin: 0px;
-			overflow: hidden;
-		}
-		#board {
-			width: 100%;
-			background: green;
-			table-layout: fixed;
-		}
-		.piece {
-			padding: 0px;
-			margin: 0px;
-			overflow: hidden;
-		}
-		.row {
-			padding: 0px;
+		.buttonone_pressed {
+			position:relative;
+			top:1px;
+			background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #8cb82b), color-stop(1, #9dce2c) );
+			background:-moz-linear-gradient( center top, #8cb82b 5%, #9dce2c 100% );
+			filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#8cb82b', endColorstr='#9dce2c');
+			background-color:#8cb82b;
 		}
 		</style>
 	</head>
-	<body onLoad="init()">
-		<div id='gamewindow'>
+	<body onload='init()'>
+		<div id='gamewindow' >
 			<table id='board'>
 			</table>
 		</div>
