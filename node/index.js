@@ -1,4 +1,5 @@
 var io = require('socket.io').listen(8001, {log: false});
+var util = require('./util');
 var mysql = require('mysql');
 var connection = mysql.createConnection({
 	database : 'gotgdb',
@@ -10,33 +11,18 @@ connection.connect();
 
 io.sockets.on('connection', function (socket) {
 	socket.on('auth', function (data) {
-		var query = "select username from users where username='"+data.username+"' and password='"+data.password+"'";
-		connection.query(query,function(err,results) {
-			if(results.length == 0) {
-				socket.emit('auth_response', { response: 'denied' });
+		var responses = ['denied','verified','logged in','in game'];
+		util.checkAuth(connection,data.username, data.password,function(res) {
+			if(res>=0) {
+				util.assignLoginID(connection,data.username,function(id) {
+					socket.emit('auth_response', { response: responses[res+1], 'id':id});
+				});
 			}
 			else {
-				var nquery = query + " and state=0";
-				connection.query(nquery,function(err,results) {
-					if(results.length > 0) {
-						socket.emit('auth_response', { response: 'verified' });
-						nquery = "update users set state=1 where username='"+data.username+"' and password='"+data.password+"'";
-						connection.query(nquery);
-					}
-				});
-				nquery = query + " and state=1";
-				connection.query(nquery,function(err,results) {
-					if(results.length > 0) {
-						socket.emit('auth_response', { response: 'already logged in' });
-					}
-				});
-				nquery = query + " and state=2";
-				connection.query(nquery,function(err,results) {
-					if(results.length > 0) {
-						socket.emit('auth_response', { response: 'currently in game' });
-					}
-				});
+				socket.emit('auth_response', { response: responses[res+1], 'id':''});
 			}
+			
 		});
 	});
+	
 });

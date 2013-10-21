@@ -1,0 +1,66 @@
+@CHARSET "ISO-8859-1";
+#banner {
+	display: block;
+	width: 100%;
+	max-width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.fontclass1 {
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: 40px;
+	color: #BBBBBB;
+	text-shadow: 2px 2px #333333;
+}
+
+.fontclass2 {
+	font-family: sans-serif;
+	color: #444444;
+}
+
+.fontclass3 {
+	font-family: sans-serif;
+	color: white;
+}
+
+textarea:focus, input:focus{
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);    
+    -webkit-user-modify: read-write-plaintext-only;
+}
+
+.ui-page {
+    background: url(images/background.png);
+    background-repeat:no-repeat;
+    background-position:center center;
+    background-size: cover; 
+}
+
+.fadein {
+	opacity: 0;
+	-webkit-animation : fadeinanim 1s;
+	-webkit-animation-fill-mode: both;
+}
+
+@-webkit-keyframes fadeinanim
+{
+	0%		{opacity:0;}
+    100%	{opacity:1;}
+}
+
+.ui-dialog-background {
+    opacity: 0.5;
+    display: block !important;
+    -webkit-transition: opacity 0.5s ease-in;
+}
+
+.ui-dialog-background.pop.in {
+    opacity: 1;
+    -webkit-transition: opacity 0.5s ease-in;
+}
+
+.ui-dialog {
+    min-height: 100% !important;
+    background: transparent !important;
+}

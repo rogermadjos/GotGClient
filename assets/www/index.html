@@ -1,272 +1,56 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>Game of the Generals</title>
-		<script type="text/javascript" src="cordova.js"></script>
-		<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
-		<script type="text/javascript" src="md5.js"></script>
-		<script type="text/javascript" src="http://192.168.1.3:8001/socket.io/socket.io.js"></script>
+		<meta charset="ISO-8859-1">
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-		<script type="text/javascript">
-		var socket;
-		var pieceSize;
-		var pieceState = new Array();
-		var pieces = 
-		[
-				"spy.png",
-				"5-star.png",
-				"4-star.png",
-				"3-star.png",
-				"2-star.png",
-				"1-star.png",
-				"colonel.png",
-				"leutenantcolonel.png",
-				"major.png",
-				"captain.png",
-				"firstleutenant.png",
-				"secondleutenant.png",
-				"sergeant.png",
-				"private.png",
-				"flag.png"
-		];
-		
-		var dirImg = ["right.png","left.png","up.png","down.png"];
-		var selection = "";
-		
-		
-		function loadImages() {
-			for(var i=0;i<pieces.length;i++) {
-				var img = new Image();
-				img.src = "images/"+pieces[i];
-			}
-			for(var i=0;i<dirImg.length;i++) {
-				var img = new Image();
-				img.src = "images/"+dirImg[i];
-			}
-		}
-		
-		function setTilePiece(coor,rank) {
-			var tile = $("#"+coor);
-			tile.html("");
-			var html = "<div class='piece' style='height:"+
-				pieceSize+"px'><image src='images/"+pieces[rank]+"' width='"+
-				pieceSize+"' height='"+pieceSize+"'/>"+
-				"<input type='hidden' name='coordinate' value='"+coor+"'/>"+
-				"<input type='hidden' name='rank' value='"+rank+"'/></div>";
-			tile.html(html);
-			tile.addClass("occupied");
-		}
-
-		function boardStartConfig() {
-			//random
-			var charset = "abcdefghi";
-			var coor = new Array();
-			var index = 0;
-			for(var x=0;x<9;x++) {
-				for(var y=1;y<=3;y++) {
-					var c = charset.charAt(x)+""+y;
-					coor[index++] = c;
-				}
-			}
-			var sel = new Array();
-			var front = 0;
-			var count = 0;
-			while(count < 21) {
-				var index = Math.floor(Math.random()*coor.length);
-				var str = coor.splice(index,1)+"";
-				if(str.charAt(1) == '3') {
-					front++;
-					if(front >= 4) {
-						continue;
-					}
-				}
-				sel[count] = str;
-				count++;
-			}
-			setTilePiece(sel[0],0);
-			setTilePiece(sel[1],0);
-			for(var i=2;i<14;i++) {
-				setTilePiece(sel[i],i-1);
-			}
-			for(var i=14;i<20;i++) {
-				setTilePiece(sel[i],13);
-			}
-			setTilePiece(sel[20],14);
-		}
-
-		function initGameBoard() {
-			pieceSize = window.innerWidth/9 - 2;
-			var board = $("#board");
-			board.css("height",(window.innerWidth * 8/9) + "px");
- 			var html = "";
- 			var charSet = "abcdefghi";
- 			for(var y=8;y>=1;y--) {
- 				html += "<tr class='row'>";
- 				for(var x=0;x<9;x++) {
- 					html += "<td class='tile' id='"+charSet.charAt(x)+y+"'>";
- 				}
- 				html += "</tr>";
- 			}
- 			board.html(html);
- 			$(".row").css("height",(window.innerWidth / 9) + "px");
- 			boardStartConfig();
- 			$(".tile").on("click",function() {
-				$(".highlight").remove();
- 				if($(this).html() == "") {
- 					$(".arrow").remove();
- 					return;
- 				}
- 				if(!$(this).hasClass("occupied")) {
- 					$(".arrow").remove();
- 					var sel = $("#"+selection);
- 					var coor = $(this).attr("id");
- 	 				var rank = sel.find("input[name='rank']").attr("value");
- 					sel.html("");
- 					sel.removeClass("occupied");
- 					setTilePiece(coor,rank);
- 					return;
- 				}
- 				$(".arrow").remove();
- 				var coor = $(this).find("input[name='coordinate']").attr("value");
- 				var rank = $(this).find("input[name='rank']").attr("value");
- 				selection = coor;
- 				$(this).append("<div class='highlight' style='margin-top:-"+pieceSize+"px;height:"+pieceSize+"px'><image src='images/highlight.png' width='"+pieceSize+"' height='"+pieceSize+"'/></div>");
- 				var x = charSet.indexOf(coor.charAt(0));
- 				var y = parseInt(coor.charAt(1))-1;
- 				var vmoves = new Array();
- 				var index = 0;
- 				if(x+1 < 9) {
- 					vmoves[index++] = "r"+charSet.charAt(x+1)+(y+1);
- 				}
- 				if(x-1 >= 0) {
- 					vmoves[index++] = "l"+charSet.charAt(x-1) +""+(y+1);
- 				}
- 				if(y+1 < 8) {
- 					vmoves[index++] = "u"+charSet.charAt(x) +""+(y+2);
- 				}
- 				if(y-1 >=0) {
- 					vmoves[index++] = "d"+charSet.charAt(x) +""+(y);
- 				}
- 				var dirSet = "rlud";
- 				for(var i=0;i<vmoves.length;i++) {
- 					var info = vmoves[i];
- 					var dir = info.charAt(0);
- 					dir = dirImg[dirSet.indexOf(dir)];
- 					info = info.charAt(1)+""+info.charAt(2);
- 					var tile = $("#"+info);
-  					if(!tile.hasClass("occupied")) {
- 						tile.html("<div class='arrow' style='height:"+pieceSize+"px'><image src='images/"+dir+"' width='"+pieceSize+"' height='"+pieceSize+"'/></div>");
-  					}
- 				}
- 			});
-			
-		}
-		
-		var user = 'botmind';
-		var pass = 'ken_0121';
-		
-		function onDeviceReady() {
-			socket = io.connect('http://192.168.1.3:8001');
-			login(user,pass);
-			
-		}
-		
-		function login(username, password) {
-			password = md5(password);
-			socket.emit('auth', { 'username': username , 'password': password});
-			socket.on('auth_response', function(data) {
-				if(data.response != "denied") {
-					initGameBoard();
-				}
-			});
-		}
-		
-		function init() {
-			document.addEventListener("deviceready", onDeviceReady, false);
-
-		}
-		
-		
-
-		</script>
-		<style media="screen" type="text/css">
- 		body {
- 			margin: 0px;
- 			padding: 0px;
- 			background: white;
- 		}
- 		button, td {
- 			-webkit-tap-highlight-color: rgba(255, 255, 255, 0) !important;
- 		}
- 		.tile {
- 			border: 0px;
- 			background: black;
- 			padding: 0px;
- 			margin: 0px;
- 			overflow: hidden;
- 		}
- 		#board {
- 			width: 100%;
- 			background: green;
- 			table-layout: fixed;
- 		}
- 		.piece {
- 			padding: 0px;
- 			margin: 0px;
- 			overflow: hidden;
- 		}
- 		.row {
- 			padding: 0px;
- 		}
- 		.buttonone {
- 			border-width: 0px;
-			-moz-box-shadow:inset 2px 2px 5px 1px #c1ed9c;
-			-webkit-box-shadow:inset 2px 2px 5px 1px #c1ed9c;
-			box-shadow:inset 2px 2px 5px 1px #c1ed9c;
-			background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #9dce2c), color-stop(1, #8cb82b) );
-			background:-moz-linear-gradient( center top, #9dce2c 5%, #8cb82b 100% );
-			filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#9dce2c', endColorstr='#8cb82b');
-			background-color:#9dce2c;
-			-webkit-border-top-left-radius:15px;
-			-moz-border-radius-topleft:15px;
-			border-top-left-radius:15px;
-			-webkit-border-top-right-radius:15px;
-			-moz-border-radius-topright:15px;
-			border-top-right-radius:15px;
-			-webkit-border-bottom-right-radius:15px;
-			-moz-border-radius-bottomright:15px;
-			border-bottom-right-radius:15px;
-			-webkit-border-bottom-left-radius:15px;
-			-moz-border-radius-bottomleft:15px;
-			border-bottom-left-radius:15px;
-			text-indent:0px;
-			display:inline-block;
-			color:#ffffff;
-			font-family:Arial;
-			font-size:15px;
-			font-weight:bold;
-			font-style:normal;
-			height:50px;
-			line-height:33px;
-			width:140px;
-			text-decoration:none;
-			text-align:center;
-			text-shadow:2px 2px 2px #689324;
-		}
-		.buttonone_pressed {
-			position:relative;
-			top:1px;
-			background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #8cb82b), color-stop(1, #9dce2c) );
-			background:-moz-linear-gradient( center top, #8cb82b 5%, #9dce2c 100% );
-			filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#8cb82b', endColorstr='#9dce2c');
-			background-color:#8cb82b;
-		}
-		</style>
+<!-- 		<script type="text/javascript" src="cordova.js"></script> -->
+<!-- 		<script type="text/javascript" src="zepto.min.js"></script> -->
+		<link rel="stylesheet" href="jquery.mobile-1.3.2.min.css" />
+		<link rel="stylesheet" href="gotg.css" />
+		<script src="jquery-1.10.2.min.js"></script>
+		<script src="jquery.mobile-1.3.2.min.js"></script>
+		<script type="text/javascript" src="md5.js"></script>
+		<script type="text/javascript" src="gotg.js"></script>
 	</head>
-	<body onload='init()'>
-		<div id='gamewindow' >
-			<table id='board'>
-			</table>
+	<body onload="init()">
+		<div data-role="page" id="main" data-theme="a">
+			<div data-role="content">
+				<img src="images/banner.png" id="banner"><br><br>
+				<div id="loginform">
+					<label class="fontclass1">Log In</label>
+					<input id="usernamefield" type="text" placeholder="Username">
+					<input id="passwordfield" type="password" placeholder="Password"><br>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"><a id="loginbutton" data-role="button" data-icon="check">Log In</a></div>
+						<div class="ui-block-b"><a id="signupbutton" data-role="button" >Sign Up</a></div>
+					</fieldset>
+				</div>
+				<div id="signupform" style="display:none;opacity:0">
+					<label class="fontclass1">Sign Up</label>
+					<input type="text" id="email" value="" placeholder="Email Address"/>
+					<input type="text" id="username" value="" placeholder="Username"/>
+					<input type="password" id="password" value="" placeholder="Password"/>
+					<input type="password" id="cpassword" value="" placeholder="Confirm Password"/>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"><a href="#dialog1" id="signup" data-role="button" data-rel="dialog">Sign Up</a></div>
+					</fieldset>
+				</div>
+			</div>
+			<div data-role="footer" data-position="fixed">
+				<fieldset class="ui-grid-d">
+					<div id="backbutton" class="ui-block-a" style="opacity:0;visibility:hidden"><a data-role="button" data-icon="arrow-l">Back</a></div>
+				</fieldset>
+			</div>
+		</div>
+		
+		<div data-role="page" id="dialog1" data-close-btn="none">
+			<div data-role="header">
+				<h2>Dialog</h2>
+			</div>
+			<div data-role="content">
+				<p>I am a dialog</p>
+			</div>
 		</div>
 	</body>
 </html>
