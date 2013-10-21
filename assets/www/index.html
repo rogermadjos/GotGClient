@@ -19,12 +19,20 @@
 				<img src="images/banner.png" id="banner"><br><br>
 				<div id="loginform">
 					<label class="fontclass1">Log In</label>
-					<input id="usernamefield" type="text" placeholder="Username">
+					<input id="usernamefield" type="text" placeholder="Username" >
 					<input id="passwordfield" type="password" placeholder="Password"><br>
 					<fieldset class="ui-grid-b">
 						<div class="ui-block-a"><a id="loginbutton" data-role="button" data-icon="check">Log In</a></div>
 						<div class="ui-block-b"><a id="signupbutton" data-role="button" >Sign Up</a></div>
 					</fieldset>
+				</div>
+				<div id="lobby" style="display:none;opacity:0">
+					<label class="fontclass1">Options</label>
+					<a id="loginbutton" data-role="button">Game Room</a>
+					<a id="loginbutton" data-role="button">Ranking</a>
+					<a id="loginbutton" data-role="button">Chat</a>
+					<a id="signupbutton" data-role="button">Board Configurations</a>
+					<a id="loginbutton" data-role="button">Log Out</a>
 				</div>
 				<div id="signupform" style="display:none;opacity:0">
 					<label class="fontclass1">Sign Up</label>
@@ -33,7 +41,20 @@
 					<input type="password" id="password" value="" placeholder="Password"/>
 					<input type="password" id="cpassword" value="" placeholder="Confirm Password"/>
 					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"><a href="#dialog1" id="signup" data-role="button" data-rel="dialog">Sign Up</a></div>
+						<div class="ui-block-a"><a id="signup" data-role="button">Sign Up</a></div>
+					</fieldset>
+				</div>
+				<div id="dialog" style="background:#555555;border-radius: 15px;display:none;box-shadow: 3px 3px 3px #222222;">
+					<div data-role="header" style="border-radius: 15px 15px 0 0;">
+						<h2>Sign Up</h2>
+					</div>
+					<div id="dialogcontent" data-role="content">
+						<p>An e-mail has been sent to your e-mail account 
+						<a>roger.madjos@gmail.com</a>. Please click the link provided in order to verify your account.</p>
+					</div>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"></div>
+						<div class="ui-block-b"><a id="ok" data-role="button">OK</a></div>
 					</fieldset>
 				</div>
 			</div>
@@ -41,15 +62,6 @@
 				<fieldset class="ui-grid-d">
 					<div id="backbutton" class="ui-block-a" style="opacity:0;visibility:hidden"><a data-role="button" data-icon="arrow-l">Back</a></div>
 				</fieldset>
-			</div>
-		</div>
-		
-		<div data-role="page" id="dialog1" data-close-btn="none">
-			<div data-role="header">
-				<h2>Dialog</h2>
-			</div>
-			<div data-role="content">
-				<p>I am a dialog</p>
 			</div>
 		</div>
 	</body>

@@ -1,15 +1,5 @@
 
 
-$(function() {
-    $('div[data-role="dialog"]').live('pagebeforeshow', function(e, ui) {
-    ui.prevPage.addClass("ui-dialog-background ");
-    });
-
-    $('div[data-role="dialog"]').live('pagehide', function(e, ui) {
-    $(".ui-dialog-background ").removeClass("ui-dialog-background ");
-    });
-});
-
 function init() {
 	
 	$("#signupbutton").click(function() {
@@ -23,7 +13,13 @@ function init() {
 		$("#signupform").addClass("fadein");
 		$("#backbutton").css("visibility","visible");
 		$("#backbutton").addClass("fadein");
-		
+	});
+	
+	$("#loginbutton").click(function() {
+		$("#loginform").removeClass("fadein");
+		$("#loginform").css("display","none");
+		$("#lobby").css("display","block");
+		$("#lobby").addClass("fadein");
 	});
 	
 	$("#backbutton").click(function() {
@@ -37,6 +33,17 @@ function init() {
 		$("#backbutton").css("opacity","0");
 		$("#loginform").css("display","block");
 		$("#loginform").addClass("fadein");
+	});
+	
+	$("#signup").click(function() {
+		$("#signupform").removeClass("fadein");
+		$("#backbutton").removeClass("fadein");
+		$("#signupform").css("display","none");
+		$("#signupform").css("opacity","0");
+		$("#backbutton").css("visibility","hidden");
+		$("#backbutton").css("opacity","0");
+		$("#dialog").css("display","block");
+		$("#dialog").addClass("fadein");
 	});
 }
 

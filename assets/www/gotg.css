@@ -33,13 +33,12 @@ textarea:focus, input:focus{
 .ui-page {
     background: url(images/background.png);
     background-repeat:no-repeat;
-    background-position:center center;
     background-size: cover; 
 }
 
 .fadein {
 	opacity: 0;
-	-webkit-animation : fadeinanim 1s;
+	-webkit-animation : fadeinanim 0.75s;
 	-webkit-animation-fill-mode: both;
 }
 
@@ -49,18 +48,3 @@ textarea:focus, input:focus{
     100%	{opacity:1;}
 }
 
-.ui-dialog-background {
-    opacity: 0.5;
-    display: block !important;
-    -webkit-transition: opacity 0.5s ease-in;
-}
-
-.ui-dialog-background.pop.in {
-    opacity: 1;
-    -webkit-transition: opacity 0.5s ease-in;
-}
-
-.ui-dialog {
-    min-height: 100% !important;
-    background: transparent !important;
-}
