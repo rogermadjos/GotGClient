@@ -24,7 +24,7 @@ $.getScript = function(url, callback){
  
 var server_url = "http://192.168.1.6:8050";
 var socket;
-var timeout = 30000;
+var timeout = 5000;
 
 $(document).ready(function() {
     window.isphone = false;
@@ -51,11 +51,13 @@ function initConnection() {
 		if(!loaded) {
 			$("#wait").removeClass("fadein");
 			$("#wait").css("display","none");
+			$("#errorcontent").html("Cannot connect to server.");
 			$("#errorconnect").css("display","block");
 			$("#errorconnect").addClass("fadein");
 			$("#retry").click(function() {
 				$("#errorconnect").removeClass("fadein");
 				$("#errorconnect").css("display","none");
+				$("#waitcontent").html("Connecting to server . . . .");
 				$("#wait").css("display","block");
 				$("#wait").addClass("fadein");
 				initConnection();
@@ -129,6 +131,7 @@ function prepare() {
 		var password = $("#password").val();
 		var cpassword = $("#cpassword").val();
 		var topass = false;
+		$("#dialogtitle").html("Sign Up");
 		if(email==""||username==""||password==""||cpassword=="") {
 			$("#dialogcontent").html("Please fill up all the fields.");
 		}
@@ -181,8 +184,54 @@ function prepare() {
 			}
 			
 			console.log(data);
-			
+			var wait_res = true;
 			socket.emit('register', data);
+			setTimeout(function() {
+				if(wait_res) {
+					socket.removeListener('register_res', handler);
+					$("#wait").removeClass("fadein");
+					$("#wait").css("display","none");
+					$("#errorcontent").html("Cannot connect to server.");
+					$("#errorconnect").css("display","block");
+					$("#errorconnect").addClass("fadein");
+					$("#retry").click(function() {
+						$("#errorconnect").removeClass("fadein");
+						$("#errorconnect").css("display","none");
+						$("#signupform").css("display","block");
+						$("#signupform").addClass("fadein");
+					});
+				}
+			},timeout);
+			var handler = function(data) {
+				wait_res = false;
+				$("#wait").removeClass("fadein");
+				$("#wait").css("display","none");
+				$("#dialogtitle").html("Sign Up");
+				$("#dialogcontent").html(data.response);
+				$("#dialog").css("display","block");
+				$("#dialog").addClass("fadein");
+				if(data.response=="Registration is successful.") {
+					$("#ok").click(function() {
+						$("#usernamefield").val(username);
+						$("#passwordfield").val(password);
+						$("#dialog").removeClass("fadein");
+						$("#dialog").css("display","none");
+						$("#signupform").removeClass("fadein");
+						$("#signupform").css("display","none");
+						$("#loginform").css("display","block");
+						$("#loginform").addClass("fadein");
+					});
+				}
+				else {
+					$("#ok").click(function() {
+						$("#dialog").removeClass("fadein");
+						$("#dialog").css("display","none");
+						$("#signupform").css("display","block");
+						$("#signupform").addClass("fadein");
+					});
+				}
+			};
+			socket.on('register_res', handler);
 		}
 	});
 }
