@@ -9,10 +9,71 @@ $.fn.pressEnter = function(fn) {
             }
         })
     });  
- }; 
+};
+ 
+$.getScript = function(url, callback){
+	$.ajax({
+		type: "GET",
+		url: url,
+		success: callback,
+		dataType: "script",
+		cache: true,
+		async: true
+  	});
+};
+ 
+var server_url = "http://192.168.1.6:8050";
+var socket;
+var timeout = 30000;
 
+$(document).ready(function() {
+    window.isphone = false;
+    if(document.URL.indexOf("http://") === -1 
+        && document.URL.indexOf("https://") === -1) {
+        window.isphone = true;
+    }
+
+    if(window.isphone) {
+        document.addEventListener("deviceready", init(), false);
+    }
+    else {
+        init();
+    }
+});
+ 
 function init() {
-	
+	setTimeout(initConnection,1000);
+}
+
+function initConnection() {
+	var loaded = false;
+	setTimeout(function() {
+		if(!loaded) {
+			$("#wait").removeClass("fadein");
+			$("#wait").css("display","none");
+			$("#errorconnect").css("display","block");
+			$("#errorconnect").addClass("fadein");
+			$("#retry").click(function() {
+				$("#errorconnect").removeClass("fadein");
+				$("#errorconnect").css("display","none");
+				$("#wait").css("display","block");
+				$("#wait").addClass("fadein");
+				initConnection();
+			});
+		}
+	},timeout);
+	$.getScript(server_url+"/socket.io/socket.io.js", function(){
+		loaded = true;
+		socket = io.connect(server_url);
+		$("#wait").removeClass("fadein");
+		$("#wait").css("display","none");
+		$("#loginform").css("display","block");
+		$("#loginform").addClass("fadein");
+		prepare();
+	});
+}
+
+function prepare() {
 	$("#signupbutton").click(function() {
 		$("#email").val("");
 		$("#username").val("");
@@ -40,10 +101,13 @@ function init() {
 	});
 	
 	$("#loginbutton").click(function() {
-		$("#loginform").removeClass("fadein");
-		$("#loginform").css("display","none");
-		$("#lobby").css("display","block");
-		$("#lobby").addClass("fadein");
+		var username = $("#usernamefield").val();
+		var password = $("#passwordfield").val();
+		password = md5(password);
+//		$("#loginform").removeClass("fadein");
+//		$("#loginform").css("display","none");
+//		$("#lobby").css("display","block");
+//		$("#lobby").addClass("fadein");
 	});
 	
 	$("#backbutton").click(function() {
@@ -64,7 +128,6 @@ function init() {
 		var username = $("#username").val();
 		var password = $("#password").val();
 		var cpassword = $("#cpassword").val();
-		
 		var topass = false;
 		if(email==""||username==""||password==""||cpassword=="") {
 			$("#dialogcontent").html("Please fill up all the fields.");
@@ -110,8 +173,17 @@ function init() {
 			$("#backbutton").css("opacity","0");
 			$("#wait").css("display","block");
 			$("#wait").addClass("fadein");
+			
+			var data = {
+				'email': email,
+				'username': username,
+				'password': md5(password)
+			}
+			
+			console.log(data);
+			
+			socket.emit('register', data);
 		}
-		
 	});
 }
 

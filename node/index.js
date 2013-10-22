@@ -1,28 +1,21 @@
-var io = require('socket.io').listen(8001, {log: false});
-var util = require('./util');
-var mysql = require('mysql');
+console.log("GotG server has been started.");
+
+var io = require('socket.io').listen(8050, {log: false});
+var mysql      = require('mysql');
+var dbutil = require('./gotgdb.js');
 var connection = mysql.createConnection({
-	database : 'gotgdb',
-	user     : 'root',
-	password : '',
+  host     : 'localhost',
+  user     : 'root',
+  password : '',
+  database: 'gotgdb'
 });
 
 connection.connect();
 
 io.sockets.on('connection', function (socket) {
-	socket.on('auth', function (data) {
-		var responses = ['denied','verified','logged in','in game'];
-		util.checkAuth(connection,data.username, data.password,function(res) {
-			if(res>=0) {
-				util.assignLoginID(connection,data.username,function(id) {
-					socket.emit('auth_response', { response: responses[res+1], 'id':id});
-				});
-			}
-			else {
-				socket.emit('auth_response', { response: responses[res+1], 'id':''});
-			}
-			
+	socket.on('register', function (data) {
+		dbutil.register(data,connection,function(res) {
+			socket.emit('register_res',{'response':res});
 		});
 	});
-	
 });

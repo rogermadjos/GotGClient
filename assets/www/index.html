@@ -12,11 +12,11 @@
 		<script type="text/javascript" src="md5.js"></script>
 		<script type="text/javascript" src="gotg.js"></script>
 	</head>
-	<body onload="init()">
+	<body>
 		<div data-role="page" id="main" data-theme="a">
 			<div data-role="content">
 				<img src="images/banner.png" id="banner"><br><br>
-				<div id="loginform">
+				<div id="loginform" style="display:none;opacity:0">
 					<label class="fontclass1">Log In</label>
 					<input id="usernamefield" type="text" placeholder="Username" >
 					<input id="passwordfield" type="password" placeholder="Password"><br>
@@ -56,7 +56,19 @@
 						<div class="ui-block-b"><a id="ok" data-role="button">OK</a></div>
 					</fieldset>
 				</div>
-				<div id="wait" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;display: none;opacity: 0">
+				<div id="errorconnect" style="background:#555555;border-radius: 15px;display:none;box-shadow: 3px 3px 3px #222222;">
+					<div data-role="header" style="border-radius: 15px 15px 0 0;">
+						<h2>Error</h2>
+					</div>
+					<div id="dialogcontent" data-role="content">
+						Cannot connect to server.
+					</div>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"></div>
+						<div class="ui-block-b"><a id="retry" data-role="button">Retry</a></div>
+					</fieldset>
+				</div>
+				<div id="wait" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;">
 					<div data-role="content">
 						<table>
 							<tr>
@@ -64,7 +76,7 @@
 									<img src="images/ajax-loader.gif" style="opacity:0.5"></img>
 								</td>
 								<td id="waitcontent" style="padding-left:20px">
-									
+									Connecting to server . . . .
 								</td>
 							</tr>
 						</table>
