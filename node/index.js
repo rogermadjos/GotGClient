@@ -18,4 +18,9 @@ io.sockets.on('connection', function (socket) {
 			socket.emit('register_res',{'response':res});
 		});
 	});
+	socket.on('login', function (data) {
+		dbutil.login(data,connection,function(res) {
+			socket.emit('login_res',{'response':res});
+		});
+	});
 });
