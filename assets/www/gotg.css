@@ -25,6 +25,15 @@
 	color: white;
 }
 
+.fontclass4 {
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: 20px;
+	color: #EEEEEE;
+	text-shadow: 2px 2px #333333;
+}
+
+
 textarea:focus, input:focus{
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);    
     -webkit-user-modify: read-write-plaintext-only;

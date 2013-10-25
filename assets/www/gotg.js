@@ -36,9 +36,10 @@ $.fn.restrict = function( chars ) {
 };
 
  
-var server_url = "http://192.168.1.6:8050";
+var server_url = "http://192.168.1.8:8050";
 var socket;
-var timeout = 30000;
+var timeout = 15000;
+var authData;
 
 $(document).ready(function() {
     window.isphone = false;
@@ -206,6 +207,10 @@ function login(username,password) {
 			saveUserData(username,password,function() {
 				$("#lobby").css("display","block");
 				$("#lobby").addClass("fadein");
+				authData = {
+						'username':username,
+						'password':password
+				};
 			});
 		}
 		else {
@@ -243,6 +248,193 @@ function login(username,password) {
 }
 
 function prepare() {
+	var resizeEventHandler = function() {
+		var height = $(window).height();
+		$("#invitationslistview").height(height-420);
+		$("#challengerslistview").height(height-365);
+	};
+	
+	resizeEventHandler();
+	
+	$(window).resize(resizeEventHandler);
+	
+	
+	$("#gamebutton").off('click').click(function() {
+		$("#lobby").css("display","none");
+		$("#lobby").removeClass("fadein");
+		
+		$("#gameroom").css("display","block");
+		$("#gameroom").addClass("fadein");
+		$("#backbutton").css("visibility","visible");
+		$("#backbutton").addClass("fadein");
+		
+		socket.emit('onetime_update_battleinvitations');
+		
+		socket.emit('startupdate_battleinvitations');
+		var biHandler = function(data) {
+			var html = "";
+			for(var i=0;i<data.battleinvitations.length;i++) {
+				html = html + "<li><a href='#'>"+data.battleinvitations[i].username+"</a></li>";
+			}
+			$("#battleinvitationslistview").html(html);
+			$("#battleinvitationslistview").listview('refresh');
+			
+			
+		};
+		socket.on('startupdate_battleinvitations_res',biHandler);
+		
+		$("#postbattleinvitation").click(function() {
+			if($("#postbattleinvitation").hasClass("post")) {
+				$("#postbattleinvitation").removeClass("post");
+				$("#postbattleinvitation").addClass("posting");
+				$("#postbattleinvitation").html("<img src='images/ajax-loader.gif' style='opacity:0.3;width:20px;height:15px;'>");
+				$("#postbattleinvitation").button("refresh");
+				var wait_res = true;
+				socket.emit('post_battleinvitation',authData);
+				var handler = function(data) {
+					wait_res = false;
+					console.log(data.response);
+					if(data.response=='Success') {
+						socket.emit('onetime_update_battleinvitations');
+						$("#postbattleinvitation").removeClass("posting");
+						$("#postbattleinvitation").addClass("posted");
+						$("#postbattleinvitation").html("<span>Cancel Battle Invitation</span>");
+						$("#postbattleinvitation").button("refresh");
+					}
+					else {
+						$("#postbattleinvitation").removeClass("posted");
+						$("#postbattleinvitation").removeClass("posting");
+						$("#postbattleinvitation").addClass("post");
+						$("#postbattleinvitation").html("<span>Post Battle Invitation</span>");
+						$("#postbattleinvitation").button("refresh");
+					}
+				};
+				setTimeout(function() {
+					if(wait_res) {
+						socket.removeListener('post_battleinvitation_res', handler);
+						$("#postbattleinvitation").removeClass("posted");
+						$("#postbattleinvitation").removeClass("posting");
+						$("#postbattleinvitation").addClass("post");
+						$("#postbattleinvitation").html("<span>Post Battle Invitation</span>");
+					}
+				},timeout);
+				socket.on('post_battleinvitation_res', handler);
+			}
+		});
+		
+		$("#battleinvitations").click(function() {
+//			if(!$("#battleinvitations").hasClass("ui-btn-active")) {
+				$("#battlechallengersform").css("display","none");
+				$("#battlechallengersform").removeClass("fadein");
+				$("#battleinvitationsform").css("display","block");
+				$("#battleinvitationsform").addClass("fadein");
+//			}
+		});
+		
+		$("#battlechallengers").click(function() {
+//			if(!$("#battlechallengers").hasClass("ui-btn-active")) {
+				$("#battleinvitationsform").css("display","none");
+				$("#battleinvitationsform").removeClass("fadein");
+				$("#battlechallengersform").css("display","block");
+				$("#battlechallengersform").addClass("fadein");
+//			}
+		});
+		
+		$("#battleinvitations").click();
+		
+		$("#backbutton").off('click').click(function() {
+			socket.emit('stopupdate_battleinvitations');
+			socket.removeListener('startupdate_battleinvitations_res', biHandler);
+			
+			$("#gameroom").removeClass("fadein");
+			$("#gameroom").css("display","none");
+			$("#backbutton").css("visibility","hidden");
+			$("#backbutton").css("opacity","0");
+			$("#lobby").css("display","block");
+			$("#lobby").addClass("fadein");
+		});
+	});
+	
+	$("#accountbutton").off('click').click(function() {
+		$("#lobby").css("display","none");
+		$("#lobby").removeClass("fadein");
+		
+		$("#waitcontent").html("Retrieving account information . . . .");
+		$("#wait").css("display","block");
+		$("#wait").addClass("fadein");
+		
+		var wait_res = true;
+
+		socket.emit('retrieve', authData);
+		
+		var handler = function(data) {
+			wait_res = false;
+			$("#wait").removeClass("fadein");
+			$("#wait").css("display","none");
+			if(data.response=="Valid") {
+				$("#account").css("display","block");
+				$("#account").addClass("fadein");
+				$("#backbutton").css("visibility","visible");
+				$("#backbutton").addClass("fadein");
+				$("#account_email").val(data.email);
+				$("#account_username").val(data.username);
+				$("#account_npassword").val("");
+				$("#account_cpassword").val("");
+				$("#save").off('click').click(function() {
+					if($("#account_email").val()!=data.email) {
+						var res = validateEmail(data.email);
+					}
+					if($("#account_email").val()==data.email && $("#account_username").val()==data.username && $("#account_npassword").val()=="") {
+						//do nothing
+					}
+					else {
+						$("#waitcontent").html("Validating changes . . . .");
+						$("#wait").css("display","block");
+						$("#wait").addClass("fadein");
+					}
+				});
+				$("#backbutton").off('click').click(function() {
+					$("#account").removeClass("fadein");
+					$("#account").css("display","none");
+					$("#backbutton").css("visibility","hidden");
+					$("#backbutton").css("opacity","0");
+					$("#lobby").css("display","block");
+					$("#lobby").addClass("fadein");
+				});
+			}
+			else {
+				$("#errorcontent").html("Unable to retrieve user information.");
+				$("#errorconnect").css("display","block");
+				$("#errorconnect").addClass("fadein");
+				$("#retry").off('click').click(function() {
+					$("#errorconnect").removeClass("fadein");
+					$("#errorconnect").css("display","none");
+					$("#lobby").css("display","block");
+					$("#lobby").addClass("fadein");
+				});
+			}
+		};
+		setTimeout(function() {
+			if(wait_res) {
+				socket.removeListener('retrieve_res', handler);
+				$("#wait").removeClass("fadein");
+				$("#wait").css("display","none");
+				$("#errorcontent").html("Unable to retrieve user information.");
+				$("#errorconnect").css("display","block");
+				$("#errorconnect").addClass("fadein");
+				$("#retry").off('click').click(function() {
+					$("#errorconnect").removeClass("fadein");
+					$("#errorconnect").css("display","none");
+					$("#lobby").css("display","block");
+					$("#lobby").addClass("fadein");
+				});
+			}
+		},timeout);
+		
+		socket.on('retrieve_res', handler);
+		
+
+	});
 	
 	$("#logoutbutton").off('click').click(function() {
 		clearUserData(function() {
@@ -256,6 +448,19 @@ function prepare() {
 	});
 	
 	$("#signupbutton").off('click').click(function() {
+		$("#backbutton").off('click').click(function() {
+			$("#usernamefield").val("");
+			$("#passwordfield").val("");
+			$("#signupform").removeClass("fadein");
+			$("#backbutton").removeClass("fadein");
+			$("#signupform").css("display","none");
+			$("#signupform").css("opacity","0");
+			$("#backbutton").css("visibility","hidden");
+			$("#backbutton").css("opacity","0");
+			$("#loginform").css("display","block");
+			$("#loginform").addClass("fadein");
+		});
+		
 		$("#email").val("");
 		$("#username").val("");
 		$("#password").val("");
@@ -267,31 +472,126 @@ function prepare() {
 		$("#backbutton").css("visibility","visible");
 		$("#backbutton").addClass("fadein");
 		
-		$('#email').pressEnter(function(){
-			$("#signup").click();
-		});
 		$('#email').restrict([' ']);
-		$('#username').pressEnter(function(){
-			$("#signup").click();
-		});
 		$('#username').restrict([' ']);
-		$('#password').pressEnter(function(){
-			$("#signup").click();
-		});
 		$('#password').restrict([' ']);
-		$('#cpassword').pressEnter(function(){
-			$("#signup").click();
-		});
 		$('#cpassword').restrict([' ']);
+		
+		$("#signup").off('click').click(function() {
+			
+			console.log('signup');
+			
+			var email = $("#email").val();
+			var username = $("#username").val();
+			var password = $("#password").val();
+			var cpassword = $("#cpassword").val();
+			var topass = false;
+			$("#dialogtitle").html("Sign Up");
+			if(email==""||username==""||password==""||cpassword=="") {
+				$("#dialogcontent").html("Please fill up all the fields.");
+			}
+			else if(!validateEmail(email)) {
+				$("#dialogcontent").html("Please enter a valid email address.");
+			}
+			else if(evaluatePassword(password)<3) {
+				$("#dialogcontent").html("Password is not strong enough.");
+			}
+			else if(password!=cpassword) {
+				$("#dialogcontent").html("The passwords do not match.");
+			}
+			else {
+				topass = true;
+			}
+			if(!topass) {
+				$("#signupform").removeClass("fadein");
+				$("#backbutton").removeClass("fadein");
+				$("#signupform").css("display","none");
+				$("#signupform").css("opacity","0");
+				$("#backbutton").css("visibility","hidden");
+				$("#backbutton").css("opacity","0");
+				$("#dialog").css("display","block");
+				$("#dialog").addClass("fadein");
+				$("#ok").off('click').click(function() {
+					$("#dialog").removeClass("fadein");
+					$("#dialog").css("display","none");
+					$("#signupform").css("display","block");
+					$("#signupform").addClass("fadein");
+					$("#backbutton").css("visibility","visible");
+					$("#backbutton").addClass("fadein");
+				});
+			}
+			else {
+				$("#waitcontent").html("Registering account . . . .");
+				
+				$("#signupform").removeClass("fadein");
+				$("#backbutton").removeClass("fadein");
+				$("#signupform").css("display","none");
+				$("#signupform").css("opacity","0");
+				$("#backbutton").css("visibility","hidden");
+				$("#backbutton").css("opacity","0");
+				$("#wait").css("display","block");
+				$("#wait").addClass("fadein");
+				
+				var data = {
+					'email': email,
+					'username': username,
+					'password': md5(password)
+				}
+				
+				var wait_res = true;
+				socket.emit('register', data);
+				var handler = function(data) {
+					wait_res = false;
+					$("#wait").removeClass("fadein");
+					$("#wait").css("display","none");
+					$("#dialogtitle").html("Sign Up");
+					$("#dialogcontent").html(data.response);
+					$("#dialog").css("display","block");
+					$("#dialog").addClass("fadein");
+					if(data.response=="Registration is successful.") {
+						$("#ok").off('click').click(function() {
+							$("#usernamefield").val(username);
+							$("#passwordfield").val(password);
+							$("#dialog").removeClass("fadein");
+							$("#dialog").css("display","none");
+							$("#signupform").removeClass("fadein");
+							$("#signupform").css("display","none");
+							$("#loginform").css("display","block");
+							$("#loginform").addClass("fadein");
+						});
+					}
+					else {
+						$("#ok").off('click').click(function() {
+							$("#dialog").removeClass("fadein");
+							$("#dialog").css("display","none");
+							$("#signupform").css("display","block");
+							$("#signupform").addClass("fadein");
+						});
+					}
+				};
+				setTimeout(function() {
+					if(wait_res) {
+						socket.removeListener('register_res', handler);
+						$("#wait").removeClass("fadein");
+						$("#wait").css("display","none");
+						$("#errorcontent").html("Cannot connect to server.");
+						$("#errorconnect").css("display","block");
+						$("#errorconnect").addClass("fadein");
+						$("#retry").off('click').click(function() {
+							$("#errorconnect").removeClass("fadein");
+							$("#errorconnect").css("display","none");
+							$("#signupform").css("display","block");
+							$("#signupform").addClass("fadein");
+						});
+					}
+				},timeout);
+				
+				socket.on('register_res', handler);
+			}
+		});
 	});
 	
-	$('#usernamefield').pressEnter(function(){
-		$("#loginbutton").click();
-	});
 	$('#usernamefield').restrict([' ']);
-	$('#passwordfield').pressEnter(function(){
-		$("#loginbutton").click();
-	});
 	$('#passwordfield').restrict([' ']);
 	
 	$("#loginbutton").off('click').click(function() {
@@ -318,128 +618,7 @@ function prepare() {
 		}
 	});
 	
-	$("#backbutton").off('click').click(function() {
-		$("#usernamefield").val("");
-		$("#passwordfield").val("");
-		$("#signupform").removeClass("fadein");
-		$("#backbutton").removeClass("fadein");
-		$("#signupform").css("display","none");
-		$("#signupform").css("opacity","0");
-		$("#backbutton").css("visibility","hidden");
-		$("#backbutton").css("opacity","0");
-		$("#loginform").css("display","block");
-		$("#loginform").addClass("fadein");
-	});
 	
-	$("#signup").off('click').click(function() {
-		var email = $("#email").val();
-		var username = $("#username").val();
-		var password = $("#password").val();
-		var cpassword = $("#cpassword").val();
-		var topass = false;
-		$("#dialogtitle").html("Sign Up");
-		if(email==""||username==""||password==""||cpassword=="") {
-			$("#dialogcontent").html("Please fill up all the fields.");
-		}
-		else if(!validateEmail(email)) {
-			$("#dialogcontent").html("Please enter a valid email address.");
-		}
-		else if(evaluatePassword(password)<3) {
-			$("#dialogcontent").html("Password is not strong enough.");
-		}
-		else if(password!=cpassword) {
-			$("#dialogcontent").html("The passwords do not match.");
-		}
-		else {
-			topass = true;
-		}
-		if(!topass) {
-			$("#signupform").removeClass("fadein");
-			$("#backbutton").removeClass("fadein");
-			$("#signupform").css("display","none");
-			$("#signupform").css("opacity","0");
-			$("#backbutton").css("visibility","hidden");
-			$("#backbutton").css("opacity","0");
-			$("#dialog").css("display","block");
-			$("#dialog").addClass("fadein");
-			$("#ok").off('click').click(function() {
-				$("#dialog").removeClass("fadein");
-				$("#dialog").css("display","none");
-				$("#signupform").css("display","block");
-				$("#signupform").addClass("fadein");
-				$("#backbutton").css("visibility","visible");
-				$("#backbutton").addClass("fadein");
-			});
-		}
-		else {
-			$("#waitcontent").html("Registering account . . . .");
-			
-			$("#signupform").removeClass("fadein");
-			$("#backbutton").removeClass("fadein");
-			$("#signupform").css("display","none");
-			$("#signupform").css("opacity","0");
-			$("#backbutton").css("visibility","hidden");
-			$("#backbutton").css("opacity","0");
-			$("#wait").css("display","block");
-			$("#wait").addClass("fadein");
-			
-			var data = {
-				'email': email,
-				'username': username,
-				'password': md5(password)
-			}
-			
-			var wait_res = true;
-			socket.emit('register', data);
-			var handler = function(data) {
-				wait_res = false;
-				$("#wait").removeClass("fadein");
-				$("#wait").css("display","none");
-				$("#dialogtitle").html("Sign Up");
-				$("#dialogcontent").html(data.response);
-				$("#dialog").css("display","block");
-				$("#dialog").addClass("fadein");
-				if(data.response=="Registration is successful.") {
-					$("#ok").off('click').click(function() {
-						$("#usernamefield").val(username);
-						$("#passwordfield").val(password);
-						$("#dialog").removeClass("fadein");
-						$("#dialog").css("display","none");
-						$("#signupform").removeClass("fadein");
-						$("#signupform").css("display","none");
-						$("#loginform").css("display","block");
-						$("#loginform").addClass("fadein");
-					});
-				}
-				else {
-					$("#ok").off('click').click(function() {
-						$("#dialog").removeClass("fadein");
-						$("#dialog").css("display","none");
-						$("#signupform").css("display","block");
-						$("#signupform").addClass("fadein");
-					});
-				}
-			};
-			setTimeout(function() {
-				if(wait_res) {
-					socket.removeListener('register_res', handler);
-					$("#wait").removeClass("fadein");
-					$("#wait").css("display","none");
-					$("#errorcontent").html("Cannot connect to server.");
-					$("#errorconnect").css("display","block");
-					$("#errorconnect").addClass("fadein");
-					$("#retry").off('click').click(function() {
-						$("#errorconnect").removeClass("fadein");
-						$("#errorconnect").css("display","none");
-						$("#signupform").css("display","block");
-						$("#signupform").addClass("fadein");
-					});
-				}
-			},timeout);
-			
-			socket.on('register_res', handler);
-		}
-	});
 }
 
 function evaluatePassword(password)

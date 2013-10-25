@@ -24,13 +24,52 @@
 						<div class="ui-block-b"><a id="signupbutton" data-role="button" >Sign Up</a></div>
 					</fieldset>
 				</div>
+				<div id="gameroom" style="display:none;opacity:0">
+					<label class="fontclass1">Game Room</label>
+					<div style="border-radius:15px;overflow:hidden">
+						<div data-role="navbar" >
+				            <ul>
+				                <li><a href="#" id='battleinvitations' data-role="button">Battle Invitations</a></li>
+				                <li><a href="#" id='battlechallengers' data-role="button">Battle Challengers</a></li>
+				            </ul>
+				        </div>
+			        </div>
+			        <br>
+					<div id="battleinvitationsform" style="display:none;opacity:0">
+						<button id="postbattleinvitation" class="post"><span>Post Battle Invitation</span></button>
+						<br>
+						<label class="fontclass4">Battle Invitations List</label>
+						<div id="invitationslistview" style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
+						<ul data-role="listview" data-inset=true id="battleinvitationslistview">
+						</ul>
+						</div>
+					</div>
+					<div id="battlechallengersform" style="display:none;opacity:0">
+						<br>
+						<label class="fontclass4">Battle Challengers List</label>
+						<div id="challengerslistview" style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
+						<ul data-role="listview" data-inset=true>
+						</ul>
+						</div>
+					</div>
+				</div>
+				<div id="account" style="display:none;opacity:0">
+					<label class="fontclass1">Account</label>
+					<input type="text" id="account_email" value="" placeholder="Email Address"/>
+					<input type="text" id="account_username" value="" placeholder="Username"/><br>
+					<input type="text" id="account_npassword" value="" placeholder="New Password"/>
+					<input type="password" id="account_cpassword" value="" placeholder="Confirm New Password"/>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"><a id="save" data-role="button">Save</a></div>
+					</fieldset>
+				</div>
 				<div id="lobby" style="display:none;opacity:0">
 					<label class="fontclass1">Options</label>
-					<a id="loginbutton" data-role="button">Game Room</a>
-					<a id="loginbutton" data-role="button">Ranking</a>
-					<a id="loginbutton" data-role="button">Chat</a>
-					<a id="signupbutton" data-role="button">Board Configurations</a>
-					<a id="signupbutton" data-role="button">Account</a>
+					<a id="gamebutton" data-role="button">Game Room</a>
+					<a id="rankingbutton" data-role="button">Ranking</a>
+					<a id="chatbutton" data-role="button">Chat</a>
+					<a id="boardconfigbutton" data-role="button">Board Configurations</a>
+					<a id="accountbutton" data-role="button">Account</a>
 					<a id="logoutbutton" data-role="button">Log Out</a>
 				</div>
 				<div id="signupform" style="display:none;opacity:0">
