@@ -5,7 +5,7 @@
 		<script type="text/javascript" src="cordova.js"></script>
 		<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
 		<script type="text/javascript" src="md5.js"></script>
-		<script type="text/javascript" src="http://192.168.1.2:8001/socket.io/socket.io.js"></script>
+<!-- 		<script type="text/javascript" src="http://192.168.1.2:8001/socket.io/socket.io.js"></script> -->
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
 		<script type="text/javascript">
 		var socket;
@@ -184,8 +184,7 @@
 		}
 		
 		function onDeviceReady() {
-			socket = io.connect('http://192.168.1.2:8001');
-			login(user,pass);
+			initGameBoard();
 		}
 		
 		function postPublicInvitation() {
