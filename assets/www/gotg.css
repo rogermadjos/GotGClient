@@ -33,6 +33,20 @@
 	text-shadow: 2px 2px #333333;
 }
 
+.fontclass5 {
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: 15px;
+	color: #88FF88;
+}
+
+.fontclass6 {
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: 15px;
+	color: #FF8888;
+}
+
 
 textarea:focus, input:focus{
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);    
@@ -47,7 +61,7 @@ textarea:focus, input:focus{
 
 .fadein {
 	opacity: 0;
-	-webkit-animation : fadeinanim 0.75s;
+	-webkit-animation : fadeinanim 0.5s;
 	-webkit-animation-fill-mode: both;
 }
 

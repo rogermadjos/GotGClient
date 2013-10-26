@@ -77,7 +77,7 @@ exports.getBattleInvitations = function(connection,callback) {
 }
 
 exports.updateBattleInvitations = function(connection,callback) {
-	var sql = "delete from battleinvitations where (now()-posttime) >= 3600";
+	var sql = "delete from battleinvitations where (now()-posttime) >= 7200";
 	connection.query(sql,function() {
 		if(callback!=null) {
 			callback();
@@ -107,6 +107,160 @@ exports.postBattleInvitation = function(data, connection,callback) {
 					response.response = 'Failed';
 				}
 				callback(response);
+			});
+		}
+		else {
+			var response = {
+					'response': 'Failed'
+			};
+			callback(response);
+		}
+	});
+}
+
+exports.cancelBattleInvitation = function(data, connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = 'delete from battleinvitations where battleinvitations.userid = any(select users.userid from users where users.username = ?)';
+			var params = [data.username];
+			connection.query(sql,params,function(err,results) {
+				var response = {
+						'response': 'Success'
+				};
+				callback(response);
+			});
+		}
+		else {
+			var response = {
+					'response': 'Failed'
+			};
+			callback(response);
+		}
+	});
+}
+
+exports.challengeBattle = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "insert into challengers values(" +
+					"(select users.userid from users where users.username=?)," +
+					"(select users.userid from users where users.username=?)" +
+					",now())";
+			var params = [data.opponent,data.username];
+			connection.query(sql,params,function(err,results) {
+				if(err!=null) {
+					var response = {
+							'response': 'Failed'
+					};
+					callback(response);
+				}
+				else {
+					var response = {
+							'response': 'Success'
+					};
+					callback(response);
+				}
+				
+			});
+		}
+		else {
+			var response = {
+					'response': 'Failed'
+			};
+			callback(response);
+		}
+	});
+}
+
+exports.getChallengeData = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "select users.username from users " +
+					"inner join (select distinct challengers.opponentuserid " +
+					"from challengers where challengers.challengeruserid=(select users.userid from users where users.username=?)) " +
+					"as opponents on users.userid=opponents.opponentuserid";
+			var params = [data.username];
+			connection.query(sql,params,function(err,results) {
+				if(err!=null) {
+					var response = {
+							'response': 'Failed'
+					};
+					callback(response);
+				}
+				else {
+					var response = {
+							'response': 'Success',
+							'data':results
+					};
+					callback(response);
+				}
+				
+			});
+		}
+		else {
+			var response = {
+					'response': 'Failed'
+			};
+			callback(response);
+		}
+	});
+}
+
+exports.cancelChallenge = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "delete from challengers where challengers.opponentuserid=(select users.userid from users where users.username=?) " +
+					"and challengers.challengeruserid=(select users.userid from users where users.username=?)";
+			var params = [data.opponent,data.username];
+			connection.query(sql,params,function(err,results) {
+				if(err!=null) {
+					var response = {
+							'response': 'Failed'
+					};
+					callback(response);
+				}
+				else {
+					var response = {
+							'response': 'Success'
+					};
+					callback(err);
+				}
+				
+			});
+		}
+		else {
+			var response = {
+					'response': 'Failed'
+			};
+			callback(response);
+		}
+	});
+}
+
+exports.getChallengers = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "select users.username, scores.score from users " +
+					"inner join (select distinct challengers.challengeruserid " +
+					"from challengers where challengers.opponentuserid=(select users.userid from users where users.username=?)) " +
+					"as chal on users.userid=chal.challengeruserid " +
+					"inner join scores on scores.userid=users.userid";
+			var params = [data.username];
+			connection.query(sql,params,function(err,results) {
+				if(err!=null) {
+					var response = {
+							'response': 'Failed'
+					};
+					callback(response);
+				}
+				else {
+					var response = {
+							'response': 'Success',
+							'data':results
+					};
+					callback(response);
+				}
+				console.log(err);
 			});
 		}
 		else {

@@ -203,6 +203,7 @@ function login(username,password) {
 		wait_res = false;
 		$("#wait").removeClass("fadein");
 		$("#wait").css("display","none");
+		socket.removeListener('login_res', handler);
 		if(data.response=="Valid") {
 			saveUserData(username,password,function() {
 				$("#lobby").css("display","block");
@@ -248,6 +249,12 @@ function login(username,password) {
 }
 
 function prepare() {
+	function paddy(n, p, c) {
+	    var pad_char = typeof c !== 'undefined' ? c : '0';
+	    var pad = new Array(1 + p).join(pad_char);
+	    return (pad + n).slice(-pad.length);
+	}
+	
 	var resizeEventHandler = function() {
 		var height = $(window).height();
 		$("#invitationslistview").height(height-420);
@@ -260,8 +267,16 @@ function prepare() {
 	
 	
 	$("#gamebutton").off('click').click(function() {
+		$("#challengerslistview").listview();
+		
 		$("#lobby").css("display","none");
 		$("#lobby").removeClass("fadein");
+		
+		$("#tbdialog").css("display","none");
+		$("#tbdialog").removeClass("fadein");
+		
+		$("#gameroomcontents").css("display","block");
+		$("#gameroomcontents").addClass("fadein");
 		
 		$("#gameroom").css("display","block");
 		$("#gameroom").addClass("fadein");
@@ -269,22 +284,210 @@ function prepare() {
 		$("#backbutton").addClass("fadein");
 		
 		socket.emit('onetime_update_battleinvitations');
+		socket.emit('getchallengedata',authData);
 		
 		socket.emit('startupdate_battleinvitations');
+		socket.emit('startupdate_challengers',authData);
 		var biHandler = function(data) {
 			var html = "";
+			var inlist = false;
 			for(var i=0;i<data.battleinvitations.length;i++) {
-				html = html + "<li><a href='#'>"+data.battleinvitations[i].username+"</a></li>";
+				html = html + "<li data-theme='a'><a class='inv' data-role='button'><span class='usernameinfo'>"+data.battleinvitations[i].username+"</span><span class='ui-li-count'>"+paddy(Math.round(data.battleinvitations[i].score),6)+"</span></a></li>";
+				inlist = inlist || data.battleinvitations[i].username == authData.username;
 			}
+			socket.emit('getchallengedata',authData);
+			var handler = function() {
+				
+				if($(this).hasClass('challenged')) {
+					var user = $(this).find(".usernameinfo").html();
+					
+					$("#gameroomcontents").css("display","none");
+					$("#gameroomcontents").removeClass("fadein");
+					
+					$("#tbdialogtitle").html("Challenge");
+					var htmlV = "Continue if you want to cancel the Challenge.";
+					$("#tbdialogcontent").html(htmlV);
+					$("#tbdialog").css("display","block");
+					$("#tbdialog").addClass("fadein");
+					$("#tbbuttonone").html('Continue');
+					$("#tbbuttontwo").html('Cancel');
+					$("#tbbuttonone").button('refresh');
+					$("#tbbuttontwo").button('refresh');
+					$("#tbbuttonone").off('click').click(function() {
+						$("#tbdialog").css("display","none");
+						$("#tbdialog").removeClass("fadein");
+						
+						$("#gameroomcontents").css("display","block");
+						$("#gameroomcontents").addClass("fadein");
+						
+						var cancelCData = {
+								'username':authData.username,
+								'password':authData.password,
+								'opponent':user
+						}
+						
+						console.log(authData);
+						socket.emit('cancelchallenge',cancelCData);
+						
+						socket.emit('getchallengedata',authData);
+					});
+					$("#tbbuttontwo").off('click').click(function() {
+						$("#tbdialog").css("display","none");
+						$("#tbdialog").removeClass("fadein");
+						
+						$("#gameroomcontents").css("display","block");
+						$("#gameroomcontents").addClass("fadein");
+					});
+				}
+				else {
+					var username = $(this).find(".usernameinfo").html();
+					if(!(authData.username == username)) {
+						$("#gameroomcontents").css("display","none");
+						$("#gameroomcontents").removeClass("fadein");
+						
+						$("#tbdialogtitle").html("Challenge");
+						var htmlV = "<table>" +
+								"<tr>" +
+								"<td width=100><span class='fontclass5'>Challenger</span></td>" +
+								"<td>"+authData.username+"</td>" +
+								"</tr>" +
+								"<tr>" +
+								"<td><span class='fontclass6'>Opponent</span></td>" +
+								"<td>"+username+"</td>" +
+								"</tr>" +
+								"</table>";
+						$("#tbdialogcontent").html(htmlV);
+						$("#tbdialog").css("display","block");
+						$("#tbdialog").addClass("fadein");
+						$("#tbbuttonone").html('Challenge');
+						$("#tbbuttontwo").html('Cancel');
+						$("#tbbuttonone").button('refresh');
+						$("#tbbuttontwo").button('refresh');
+						$("#tbbuttonone").off('click').click(function() {
+							console.log('challenging');
+							var wait_res = true;
+							var challengeData = {
+									'username':authData.username,
+									'password':authData.password,
+									'opponent':username
+							};
+							socket.emit('challenge',challengeData);
+							var handler = function(data) {
+								wait_res = false;
+								socket.removeListener('challenge_res', handler);
+								if(data.response=='Success') {
+									socket.emit('getchallengedata',authData);
+									$("#tbdialog").css("display","none");
+									$("#tbdialog").removeClass("fadein");
+									
+									$("#gameroomcontents").css("display","block");
+									$("#gameroomcontents").addClass("fadein");
+								}
+								else {
+									$("#tbdialog").css("display","none");
+									$("#tbdialog").removeClass("fadein");
+									
+									$("#gameroomcontents").css("display","block");
+									$("#gameroomcontents").addClass("fadein");
+								}
+
+							};
+							setTimeout(function() {
+								if(wait_res) {
+									socket.removeListener('challenge_res', handler);
+									$("#tbdialog").css("display","none");
+									$("#tbdialog").removeClass("fadein");
+									
+									$("#gameroomcontents").css("display","block");
+									$("#gameroomcontents").addClass("fadein");
+								}
+							},timeout);
+							socket.on('challenge_res', handler);
+						});
+						$("#tbbuttontwo").off('click').click(function() {
+							$("#tbdialog").css("display","none");
+							$("#tbdialog").removeClass("fadein");
+							
+							$("#gameroomcontents").css("display","block");
+							$("#gameroomcontents").addClass("fadein");
+						});
+					}
+				}
+			};
+			$("body").off('click','.inv').on('click','.inv',handler);
+			
 			$("#battleinvitationslistview").html(html);
 			$("#battleinvitationslistview").listview('refresh');
 			
-			
+			if(inlist) {
+				$("#postbattleinvitation").removeClass("post");
+				$("#postbattleinvitation").removeClass("posting");
+				$("#postbattleinvitation").addClass("posted");
+				$("#postbattleinvitation").html("<span>Cancel Battle Invitation</span>");
+				$("#postbattleinvitation").button("refresh");
+			}
 		};
+		
 		socket.on('startupdate_battleinvitations_res',biHandler);
+		
+		var gcdHandler = function(data) {
+			var opponents = new Array();
+			console.log(data.data);
+			if(data.data != null) {
+				for(var i=0;i<data.data.length;i++) {
+					opponents[i] = data.data[i].username;
+				}
+			}
+			$("#battleinvitationslistview").find('li').each(function() {
+				var op = $(this).find(".usernameinfo").html();
+				
+				if(opponents.indexOf(op) >= 0) {
+					console.log(op +" Challenged");
+					$(this).attr('data-theme','c').trigger('mouseout');
+					$(this).find(".inv").addClass('challenged');
+				}
+				else {
+					
+					$(this).removeAttr('data-theme').removeClass("ui-btn-up-c").addClass("ui-btn-up-a").trigger('mouseout');
+					$(this).find(".inv").removeClass('challenged');
+				}
+			});
+			$("#battleinvitationslistview").listview('refresh');
+		}
+		socket.on('getchallengedata_res',gcdHandler);
+		
+		var cHandler = function(data) {
+			var challengers = new Array();
+			if(data.data != null) {
+				for(var i=0;i<data.data.length;i++) {
+					challengers[i] = {
+							'username':data.data[i].username,
+							'score':data.data[i].score
+					}
+				}
+			}
+			html = "";
+			console.log(data);
+			for(var i=0;i<challengers.length;i++) {
+				console.log(challengers[i].username+" "+challengers[i].score);
+				html = html + "<li data-theme='a'><a class='chal' data-role='button'><span class='challengerinfo'>"+challengers[i].username+"</span></a></li>";
+			}
+			var handler = function() {
+				
+			}
+			
+			$("body").off('click','.chal').on('click','.chal',handler);
+
+			$("#challengerslistview").html(html);
+			
+			$("#challengerslistview").listview('refresh');
+			
+		}
+		socket.on('startupdate_challengers_res',cHandler);
 		
 		$("#postbattleinvitation").click(function() {
 			if($("#postbattleinvitation").hasClass("post")) {
+				$("#postbattleinvitation").removeClass("posted");
 				$("#postbattleinvitation").removeClass("post");
 				$("#postbattleinvitation").addClass("posting");
 				$("#postbattleinvitation").html("<img src='images/ajax-loader.gif' style='opacity:0.3;width:20px;height:15px;'>");
@@ -293,7 +496,7 @@ function prepare() {
 				socket.emit('post_battleinvitation',authData);
 				var handler = function(data) {
 					wait_res = false;
-					console.log(data.response);
+					socket.removeListener('post_battleinvitation_res', handler);
 					if(data.response=='Success') {
 						socket.emit('onetime_update_battleinvitations');
 						$("#postbattleinvitation").removeClass("posting");
@@ -316,9 +519,41 @@ function prepare() {
 						$("#postbattleinvitation").removeClass("posting");
 						$("#postbattleinvitation").addClass("post");
 						$("#postbattleinvitation").html("<span>Post Battle Invitation</span>");
+						$("#postbattleinvitation").button("refresh");
 					}
 				},timeout);
 				socket.on('post_battleinvitation_res', handler);
+			}
+			else if($("#postbattleinvitation").hasClass("posted")) {
+				$("#postbattleinvitation").removeClass("posted");
+				$("#postbattleinvitation").removeClass("post");
+				$("#postbattleinvitation").addClass("posting");
+				$("#postbattleinvitation").html("<img src='images/ajax-loader.gif' style='opacity:0.3;width:20px;height:15px;'>");
+				$("#postbattleinvitation").button("refresh");
+				var wait_res = true;
+				socket.emit('cancel_battleinvitation',authData);
+				var handler = function(data) {
+					wait_res = false;
+					socket.removeListener('cancel_battleinvitation_res', handler);
+					$("#postbattleinvitation").removeClass("posted");
+					$("#postbattleinvitation").removeClass("posting");
+					$("#postbattleinvitation").addClass("post");
+					$("#postbattleinvitation").html("<span>Post Battle Invitation</span>");
+					$("#postbattleinvitation").button("refresh");
+					socket.emit('onetime_update_battleinvitations');
+				}
+				setTimeout(function() {
+					if(wait_res) {
+						socket.removeListener('cancel_battleinvitation_res', handler);
+						$("#postbattleinvitation").removeClass("posted");
+						$("#postbattleinvitation").removeClass("posting");
+						$("#postbattleinvitation").addClass("post");
+						$("#postbattleinvitation").html("<span>Post Battle Invitation</span>");
+						$("#postbattleinvitation").button("refresh");
+					}
+				},timeout);
+				socket.on('cancel_battleinvitation_res', handler);
+				
 			}
 		});
 		
@@ -337,6 +572,8 @@ function prepare() {
 				$("#battleinvitationsform").removeClass("fadein");
 				$("#battlechallengersform").css("display","block");
 				$("#battlechallengersform").addClass("fadein");
+				
+				
 //			}
 		});
 		
@@ -344,7 +581,13 @@ function prepare() {
 		
 		$("#backbutton").off('click').click(function() {
 			socket.emit('stopupdate_battleinvitations');
+			socket.emit('stopupdate_challengers');
 			socket.removeListener('startupdate_battleinvitations_res', biHandler);
+			socket.removeListener('getchallengedata_res', gcdHandler);
+			socket.removeListener('startupdate_challengers_res', gcdHandler);
+			
+			$("#tbdialog").css("display","none");
+			$("#tbdialog").removeClass("fadein");
 			
 			$("#gameroom").removeClass("fadein");
 			$("#gameroom").css("display","none");
@@ -444,6 +687,8 @@ function prepare() {
 			$("#lobby").removeClass("fadein");
 			$("#loginform").css("display","block");
 			$("#loginform").addClass("fadein");
+			
+			document.location = "index.html";
 		});
 	});
 	
