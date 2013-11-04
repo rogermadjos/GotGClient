@@ -2,9 +2,20 @@
 #banner {
 	display: block;
 	width: 100%;
+	height: 82px;
 	max-width: 600px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.progressbar {
+	border-radius: 30px;
+	width: 100%;
+	height: 55px;
+	overflow: hidden;
+	background: url(images/progress_bg.png);
+    background-repeat:no-repeat;
+    background-size: 100% 55px; 
 }
 
 .fontclass1 {
@@ -64,6 +75,12 @@ textarea:focus, input:focus{
 	-webkit-animation : fadeinanim 0.5s;
 	-webkit-animation-fill-mode: both;
 }
+
+.gameboard {
+	width: auto;
+	margin-top: -30px;
+}
+
 
 @-webkit-keyframes fadeinanim
 {

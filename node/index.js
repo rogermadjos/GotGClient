@@ -3,20 +3,42 @@ console.log("GotG server has been started.");
 var io = require('socket.io').listen(8050, {log: false});
 var mysql      = require('mysql');
 var dbutil = require('./gotgdb.js');
+var gameutil = require('./gamescript.js');
+
 var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : '',
-  database: 'gotgdb'
+//  host     : 'localhost',
+//  user     : 'root',
+//  password : '',
+//  database: 'gotgdb'
+	  host     : 'gotgdb.cb0sga6h0phr.ap-southeast-1.rds.amazonaws.com',
+	  user     : 'botmind',
+	  password : 'ken_0121',
+	  database: 'gotgdb'
 });
 
+var timeout = 30000;
 var refreshTime = 1000;
 
 connection.connect();
 setInterval(function() {
 	dbutil.updateBattleInvitations(connection);
-	console.log('Update Routine');
+	dbutil.updateBattleChallenges(connection);
 },refreshTime*10);
+
+var connectionSockets = new Object();
+
+function expiringCall(event,timeout, socket, handler, timeoutHandler) {
+	var func = function(data) {
+		clearTimeout(tevent);
+		socket.removeListener(event,func);
+		handler(data);
+	}
+	var tevent = setTimeout(function() {
+		socket.removeListener(event,func);
+		timeoutHandler();
+	},timeout);
+	socket.on(event,func);
+}
 
 io.sockets.on('connection', function (socket) {
 	var battleInvitationsUpdate = function() {
@@ -33,6 +55,13 @@ io.sockets.on('connection', function (socket) {
 	socket.on('login', function (data) {
 		dbutil.login(data,connection,function(res) {
 			socket.emit('login_res',{'response':res});
+			if(res == 'Valid') {
+				dbutil.getUserId(data.username,connection,function(userid) {
+					if(userid != null) {
+						connectionSockets[userid] = socket.id;
+					}
+				});
+			}
 		});
 	});
 	socket.on('retrieve', function (data) {
@@ -95,19 +124,85 @@ io.sockets.on('connection', function (socket) {
 		}
 		socket.on('stopupdate_challengers', handler);
 	});
+	socket.on('prepare_battle', function(data) {
+		console.log('prepare battle\nopponent: '+data.username+'\nchallenger: '+data.challenger);
+		dbutil.getUserId(data.challenger,connection,function(userid) {
+			if(userid != null) {
+				var socketid = connectionSockets[userid];
+				if(socketid != null) {
+					console.log('sockets');
+					var mysocket = io.sockets.sockets[socketid];
+					if(mysocket != null) {
+						console.log('mysockets');
+						if(!mysocket.disconnected) {
+							console.log('mysockets');
+
+							var opponentBoardConfig, challengerBoardConfig;
+							socket.emit('get_battle_config');
+							expiringCall('get_battle_config_res',timeout, socket, function(data2) {
+								console.log('opponent boardconfig');
+								opponentBoardConfig = data2;
+								mysocket.emit('get_battle_config');
+								expiringCall('get_battle_config_res',timeout, mysocket, function(data3) {
+									console.log(data.challenger +'challenger boardconfig');
+									challengerBoardConfig = data3;
+									
+									mysocket.emit('challenge_accepted',{'opponent':data.username});
+									
+									var res = {
+										'response':'Succeeded'
+									};
+									socket.emit('prepare_battle_res',res);
+									
+									expiringCall('battle_decide',timeout, mysocket, function(data4) {
+										if(data4 == 'start') {
+											socket.emit('battle_engage','commence');
+											mysocket.emit('battle_engage','commence');
+											
+											gameutil.startGame(data.username,data.challenger,opponentBoardConfig, challengerBoardConfig, socket, mysocket);
+										}
+										else {
+											socket.emit('battle_engage','abort');
+										}
+									}, function() {});
+
+								}, function() {
+									socket.emit('prepare_battle_res',{'response':'Failed'});
+								});
+							}, function() {
+								socket.emit('prepare_battle_res',{'response':'Failed'});
+							});
+						}
+						else {
+							socket.emit('prepare_battle_res',{'response':'Failed'});
+						}
+					}
+					else {
+						socket.emit('prepare_battle_res',{'response':'Failed'});
+					}
+				}
+				else {
+					socket.emit('prepare_battle_res',{'response':'Failed'});
+				}
+			}
+			else {
+				//error
+			}
+		});
+	});
 	socket.on('startupdate_battleinvitations', function (data) {
 		var refreshIntervalID;
-//		var lastChecksum = 0;
-//		refreshIntervalID = setInterval(function() {
-//			dbutil.getChecksum('battleinvitations',connection,function(checksum) {
-//				if(lastChecksum!=checksum) {
-//					dbutil.getBattleInvitations (connection,function(data) {
-//						socket.emit('startupdate_battleinvitations_res',{'battleinvitations':data});
-//					});
-//				}
-//				lastChecksum = checksum;
-//			})
-//		},refreshTime);
+		var lastChecksum = 0;
+		refreshIntervalID = setInterval(function() {
+			dbutil.getChecksum('battleinvitations',connection,function(checksum) {
+				if(lastChecksum!=checksum) {
+					dbutil.getBattleInvitations (connection,function(data) {
+						socket.emit('startupdate_battleinvitations_res',{'battleinvitations':data});
+					});
+				}
+				lastChecksum = checksum;
+			})
+		},refreshTime);
 		battleInvitationsUpdate();
 		var handler = function (data) {
 			clearInterval(refreshIntervalID);

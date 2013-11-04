@@ -29,6 +29,19 @@ exports.register = function(data,connection,callback) {
 	});
 };
 
+exports.getUserId = function(username,connection,callback) {
+	var sql = "select userid from users where username=?";
+	var params = [username];
+	connection.query(sql,params,function(err,results) {
+		if(results.length > 0) {
+			callback(results[0].userid);
+		}
+		else {
+			callback(null);
+		}
+	});
+}
+
 exports.login = function(data,connection,callback) {
 	auth(data,connection,function(res) {
 		if(res) {
@@ -77,7 +90,16 @@ exports.getBattleInvitations = function(connection,callback) {
 }
 
 exports.updateBattleInvitations = function(connection,callback) {
-	var sql = "delete from battleinvitations where (now()-posttime) >= 7200";
+	var sql = "delete from battleinvitations where TIMESTAMPDIFF(HOUR,posttime,now()) >= 2";
+	connection.query(sql,function() {
+		if(callback!=null) {
+			callback();
+		}
+	});
+}
+
+exports.updateBattleChallenges = function(connection,callback) {
+	var sql = "delete from challengers where TIMESTAMPDIFF(MINUTE,posttime,now()) >= 120";
 	connection.query(sql,function() {
 		if(callback!=null) {
 			callback();
