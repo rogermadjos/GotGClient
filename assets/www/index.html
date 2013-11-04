@@ -9,158 +9,67 @@
 		<script src="jquery-1.10.2.min.js"></script>
 		<script src="jquery.mobile-1.3.2.min.js"></script>
 		<script type="text/javascript" src="md5.js"></script>
+		<script type="text/javascript" src="util.js"></script>
+		<script type="text/javascript" src="plugins.js"></script>
 		<script type="text/javascript" src="gotg.js"></script>
 		<script type="text/javascript" src="gamescript.js"></script>
 	</head>
 	<body>
 		<div data-role="page" id="main" data-theme="a">
 			<div data-role="content">
-
-				<img src="images/banner.png" id="banner"><br><br>
-				<div id='gamearea' style="display:none;opacity:0">
-					<div id='gameboard' >
-	
-					</div>
-					<br>
-					<div>
-						<table id='gameareacon' style='witdh:100%;margin:0px;'>
+				<img src="images/banner.png" id="banner">
+			</div>
+			<div id="waitdialog" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;" class="margin hidden">
+				<div data-role="content">
+					<table>
 						<tr>
-							<td width="120">
-								<img id='indicator' width = '120' height = '80' src='images/state_red.png'/>
+							<td>
+								<img src="images/ajax-loader.gif" style="opacity:0.5"></img>
 							</td>
-							<td>				
-								<div class='progressbar' style='margin-top:-5px;padding-left:10px'>
-									<img id ='progress' width='0%' height='55'  src='images/progress.png'>
-								</div>
+							<td id="content" style="padding-left:20px">
 							</td>
 						</tr>
-						</table>
-					</div>
-				</div>
-				<div id="loginform" style="display:none;opacity:0">
-					<label class="fontclass1">Log In</label>
-					<input id="usernamefield" type="text" placeholder="Username" >
-					<input id="passwordfield" type="password" placeholder="Password"><br>
-					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"><a id="loginbutton" data-role="button" data-icon="check">Log In</a></div>
-						<div class="ui-block-b"><a id="signupbutton" data-role="button" >Sign Up</a></div>
-					</fieldset>
-				</div>
-				<div id="gameroom" style="display:none;opacity:0">
-					<label class="fontclass1">Game Room</label>
-					<div id='gameroomcontents'>
-						<div data-role="navbar">
-				            <ul>
-				                <li><a style="border-radius:15px 0px 0px 15px" href="#" id='battleinvitations' data-role="button">Battle Invitations</a></li>
-				                <li><a style="border-radius:0px 15px 15px 0px" href="#" id='battlechallengers' data-role="button">Battle Challengers</a></li>
-				            </ul>
-				        </div>
-				        <br>
-						<div id="battleinvitationsform" style="display:none;opacity:0">
-							<button id="postbattleinvitation" class="post"><span>Post Battle Invitation</span></button>
-							<br>
-							<label class="fontclass4">Battle Invitations List</label>
-							<div id="invitationslistview" style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
-							<ul data-role="listview" data-inset=true data-count-theme='a' id="battleinvitationslistview">
-							
-							</ul>
-							</div>
-						</div>
-						<div id="battlechallengersform" style="display:none;opacity:0" class="ui-content">
-
-							<div class="fontclass4" style="margin-left: -15px">Battle Challengers List</div>
-							<br>
-							<div id="challengerslistview" style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
-								<ul data-role="listview" data-inset=true data-count-theme='a' id="challengerslistview">
-	
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div id="account" style="display:none;opacity:0">
-					<label class="fontclass1">Account</label>
-					<input type="text" id="account_email" value="" placeholder="Email Address"/>
-					<input type="text" id="account_username" value="" placeholder="Username"/><br>
-					<input type="text" id="account_npassword" value="" placeholder="New Password"/>
-					<input type="password" id="account_cpassword" value="" placeholder="Confirm New Password"/>
-					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"><a id="save" data-role="button">Save</a></div>
-					</fieldset>
-				</div>
-				<div id="lobby" style="display:none;opacity:0">
-					<label class="fontclass1">Options</label>
-					<a id="gamebutton" data-role="button">Game Room</a>
-					<a id="rankingbutton" data-role="button">Ranking</a>
-<!-- 					<a id="chatbutton" data-role="button">Chat</a> -->
-					<a id="boardconfigbutton" data-role="button">Board Configurations</a>
-					<a id="accountbutton" data-role="button">Account</a>
-					<a id="logoutbutton" data-role="button">Log Out</a>
-				</div>
-				<div id="signupform" style="display:none;opacity:0">
-					<label class="fontclass1">Sign Up</label>
-					<input type="text" id="email" value="" placeholder="Email Address"/>
-					<input type="text" id="username" value="" placeholder="Username"/>
-					<input type="password" id="password" value="" placeholder="Password"/>
-					<input type="password" id="cpassword" value="" placeholder="Confirm Password"/>
-					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"><a id="signup" data-role="button">Sign Up</a></div>
-					</fieldset>
-				</div>
-				<div id="dialog" style="background:#555555;border-radius: 15px;display:none;box-shadow: 3px 3px 3px #222222;">
-					<div data-role="header" style="border-radius: 15px 15px 0 0;">
-						<h2 id="dialogtitle">Sign Up</h2>
-					</div>
-					<div id="dialogcontent" data-role="content">
-
-					</div>
-					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"></div>
-						<div class="ui-block-b"><a id="ok" data-role="button" data-mini="true">OK</a></div>
-					</fieldset>
-				</div>
-				<div id="tbdialog" style="background:#555555;border-radius: 15px;display:none;box-shadow: 3px 3px 3px #222222;">
-					<div data-role="header" style="border-radius: 15px 15px 0 0;">
-						<h2 id="tbdialogtitle">Sign Up</h2>
-					</div>
-					<div id="tbdialogcontent" data-role="content">
-
-					</div>
-					<fieldset class="ui-grid-c">
-						<div class="ui-block-a"></div>
-						<div class="ui-block-b"><button id="tbbuttonone" data-mini="true"></button></div>
-						<div class="ui-block-c"><button id="tbbuttontwo" data-mini="true"></button></div>
-					</fieldset>
-				</div>
-				<div id="errorconnect" style="background:#555555;border-radius: 15px;display:none;box-shadow: 3px 3px 3px #222222;">
-					<div data-role="header" style="border-radius: 15px 15px 0 0;">
-						<h2>Error</h2>
-					</div>
-					<div id="errorcontent" data-role="content">
-						Cannot connect to server.
-					</div>
-					<fieldset class="ui-grid-b">
-						<div class="ui-block-a"></div>
-						<div class="ui-block-b"><a id="retry" data-role="button" data-mini="true">OK</a></div>
-					</fieldset>
-				</div>
-				<div id="wait" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;">
-					<div data-role="content">
-						<table>
-							<tr>
-								<td>
-									<img src="images/ajax-loader.gif" style="opacity:0.5"></img>
-								</td>
-								<td id="waitcontent" style="padding-left:20px">
-									Connecting to server . . . .
-								</td>
-							</tr>
-						</table>
-					</div>
+					</table>
 				</div>
 			</div>
+			<div id="messagedialog" style="background:#555555;border-radius: 15px;box-shadow: 3px 3px 3px #222222;" class="margin hidden">
+				<div data-role="header" style="border-radius: 15px 15px 0 0;">
+					<h2 id="title">
+					Sign Up
+					</h2>
+				</div>
+				<div id="content" data-role="content">
+					Hello there
+				</div>
+				<fieldset class="ui-grid-b">
+					<div class="ui-block-a"></div>
+					<div class="ui-block-b"><a id="button" data-role="button" data-mini="true">OK</a></div>
+				</fieldset>
+			</div>
+			<div id="loginform" class="margin hidden">
+				<label class="fontclass1">Log In</label>
+				<input id="usernamefield" type="text" placeholder="Username" >
+				<input id="passwordfield" type="password" placeholder="Password"><br>
+				<fieldset class="ui-grid-b">
+					<div class="ui-block-a"><a id="loginbutton" data-role="button" data-icon="check">Log In</a></div>
+					<div class="ui-block-b"><a id="signupbutton" data-role="button" >Sign Up</a></div>
+				</fieldset>
+			</div>
+			<div id="signupform" class="margin hidden">
+				<label class="fontclass1">Sign Up</label>
+				<input type="text" id="emailfield" value="" placeholder="Email Address"/>
+				<input type="text" id="usernamefield" value="" placeholder="Username"/>
+				<input type="password" id="passwordfield" value="" placeholder="Password"/>
+				<input type="password" id="cpasswordfield" value="" placeholder="Confirm Password"/>
+				<fieldset class="ui-grid-b">
+					<div class="ui-block-a"><a id="signup" data-role="button">Sign Up</a></div>
+				</fieldset>
+			</div>
 			<div data-role="footer" data-position="fixed">
-				<div id="backbutton" style="opacity:0;visibility:hidden"><a data-role="button" data-icon="arrow-l" data-inline="true">Back</a></div>
+				<div>
+					<a id="backbutton" class="hidden" data-role="button" data-icon="arrow-l" data-inline="true">Back</a>
+					<a data-role="button" data-icon="arrow-l" data-inline="true" style="visibility:hidden">Dummy</a>
+				</div>
 			</div>
 		</div>
 	</body>

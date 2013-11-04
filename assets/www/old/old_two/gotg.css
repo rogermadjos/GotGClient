@@ -8,17 +8,6 @@
 	margin-right: auto;
 }
 
-.margin {
-	margin-left: 15px;
-	margin-right: 15px;
-}
-
-.hidden {
-	opacity: 0;
-	visibility: hidden;
-	display: none;
-}
-
 .progressbar {
 	border-radius: 30px;
 	width: 100%;
@@ -83,9 +72,15 @@ textarea:focus, input:focus{
 
 .fadein {
 	opacity: 0;
-	-webkit-animation : fadeinanim 0.35s;
+	-webkit-animation : fadeinanim 0.5s;
 	-webkit-animation-fill-mode: both;
 }
+
+.gameboard {
+	width: auto;
+	margin-top: -30px;
+}
+
 
 @-webkit-keyframes fadeinanim
 {
