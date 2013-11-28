@@ -4,6 +4,12 @@ function showWaitDialog(params) {
 	showComponent("waitdialog");
 }
 
+function paddy(n, p, c) {
+    var pad_char = typeof c !== 'undefined' ? c : '0';
+    var pad = new Array(1 + p).join(pad_char);
+    return (pad + n).slice(-pad.length);
+}
+
 function showMessageDialog(params) {
 	var shown = $(".shown");
 	shown.removeClass("shown").addClass("hidden");
@@ -14,6 +20,26 @@ function showMessageDialog(params) {
 		$("#messagedialog").addClass("hidden");
 		$("#messagedialog").removeClass("shown");
 		if(params.callback != null){
+			params.callback();
+		}
+	});
+}
+
+function showConfirmDialog(params) {
+	var shown = $(".shown");
+	shown.removeClass("shown").addClass("hidden");
+	$("#confirmdialog #title").html(params.title);
+	$("#confirmdialog #content").html(params.content);
+	showComponent("confirmdialog");
+	$("#confirmdialog #buttontwo").off('click').click(function() {
+		$("#confirmdialog").addClass("hidden");
+		$("#confirmdialog").removeClass("shown");
+		shown.addClass("fadein");
+		shown.addClass("shown");
+		shown.removeClass("hidden");
+	});
+	$("#confirmdialog #buttonone").off('click').click(function() {
+		if(params.callback!=null) {
 			params.callback();
 		}
 	});
@@ -136,6 +162,7 @@ function login(data) {
 			saveUserData(data.username,data.password,function() {
 				hideComponent('waitdialog');
 				environment.authData = data;
+				showComponent('lobby');
 			});
 		}
 		else {
@@ -156,4 +183,35 @@ function login(data) {
 			}
 		});
 	});
+}
+
+
+function evaluatePassword(password)
+{
+	var score = 1;
+
+	if (password.length < 1)
+		return 0;
+
+	if (password.length < 4)
+		return 1;
+
+	if (password.length >= 8)
+		score++;
+	if (password.length >= 10)
+		score++;
+	if (password.match(/\d+/))
+		score++;
+	if (password.match(/[a-z]/) &&
+		password.match(/[A-Z]/))
+		score++;
+	if (password.match(/.[!,@,#,$,%,^,&,*,?,_,~,-,£,(,)]/))
+		score++;
+
+	return score;
+}
+
+function validateEmail(email) { 
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
 }

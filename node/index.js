@@ -13,24 +13,104 @@ var connection = mysql.createConnection({
 });
 
 var timeout = 5000;
-var refreshTime = 1000;
+var refreshTime = 20000;
 
 connection.connect();
 
+setInterval(function() {
+	dbutil.updateBattleInvitations(connection,function(res) {
+		if(res) {
+			dbutil.getBattleInvitations(connection,function(res) {
+				io.sockets.emit('battleinvitations_update',res);
+			});
+		}
+	});
+	dbutil.updateBattleChallenges(connection,function(res) {
+		if(res) {
+			
+		}
+	});
+},refreshTime);
+
 io.sockets.on('connection', function (socket) {
-	var battleInvitationsUpdate = function() {
-		dbutil.getBattleInvitations (connection,function(data) {
-			socket.broadcast.emit('startupdate_battleinvitations_res',{'battleinvitations':data});
+	socket.on('cancelbattleinvitation', function (data) {
+		dbutil.cancelBattleInvitation(data,connection,function(res) {
+			socket.emit('cancelbattleinvitation_res',res);
+			dbutil.getBattleInvitations(connection,function(res) {
+				console.log('broadcast');
+				io.sockets.emit('battleinvitations_update',res);
+			});
 		});
-	};
+	});
+	socket.on('postbattleinvitation', function (data) {
+		dbutil.postBattleInvitation(data,connection,function(res) {
+			socket.emit('postbattleinvitation_res',res);
+			dbutil.getBattleInvitations(connection,function(res) {
+				console.log('broadcast');
+				io.sockets.emit('battleinvitations_update',res);
+			});
+		});
+	});
+	socket.on('getbattleinvitations', function (data) {
+		dbutil.getBattleInvitations(connection,function(res) {
+			socket.emit('battleinvitations_update',res);
+		});
+	});
+	socket.on('challenge', function (data) {
+		dbutil.challengeBattle(data,connection,function(res) {
+			socket.emit('challenge_res',res);
+			if(res=='Success') {
+				dbutil.getSocket(data,connection,function(socketid) {
+					if(socketid!=null) {
+						dbutil.getChallengers(data.opponent,connection,function(res) {
+							io.sockets.socket(socketid).emit('challengers_update',res);
+						});
+					}
+				});
+			}
+		});
+	});
+	socket.on('getchallengers', function (data) {
+		dbutil.getChallengers(data.username,connection,function(res) {
+			socket.emit('challengers_update',res);
+		});
+	});
+	socket.on('getchallengedata', function (data) {
+		dbutil.getChallengeData(data.username,connection,function(res) {
+			socket.emit('opponents_update',res);
+		});
+	});
+	socket.on('change', function (data) {
+		dbutil.changeAccountInfo(data,connection,function(res) {
+			socket.emit('change_res',res);
+		});
+	});
+	socket.on('retrieve', function (data) {
+		dbutil.retrieveInfo(data,connection,function(res) {
+			socket.emit('retrieve_res',res);
+		});
+	});
 	socket.on('register', function (data) {
 		dbutil.register(data,connection,function(res) {
-			socket.emit('register_res',{'response':res});
+			socket.emit('register_res',res);
 		});
 	});
 	socket.on('login', function (data) {
 		dbutil.login(data,connection,function(res) {
-			socket.emit('login_res',res);
+			if(res=="Valid") {
+				dbutil.saveSocket({'username':data.username,'socketid':socket.id},connection,function() {
+					socket.emit('login_res',res);
+				});
+			}
+			else {
+				socket.emit('login_res',res);
+			}
 		});
 	});
+	socket.on('logout',function() {
+		dbutil.deleteSocket(socket.id,connection);
+	})
+	socket.on('disconnect',function() {
+		dbutil.deleteSocket(socket.id,connection);
+	})
 });

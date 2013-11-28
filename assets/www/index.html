@@ -46,6 +46,19 @@
 					<div class="ui-block-b"><a id="button" data-role="button" data-mini="true">OK</a></div>
 				</fieldset>
 			</div>
+			<div id="confirmdialog" style="background:#555555;border-radius: 15px;box-shadow: 3px 3px 3px #222222;" class="margin hidden">
+				<div data-role="header" style="border-radius: 15px 15px 0 0;">
+					<h2 id="title">Sign Up</h2>
+				</div>
+				<div id="content" data-role="content">
+
+				</div>
+				<fieldset class="ui-grid-c">
+					<div class="ui-block-a"></div>
+					<div class="ui-block-b"><button id="buttonone" data-mini="true">Continue</button></div>
+					<div class="ui-block-c"><button id="buttontwo" data-mini="true">Cancel</button></div>
+				</fieldset>
+			</div>
 			<div id="loginform" class="margin hidden">
 				<label class="fontclass1">Log In</label>
 				<input id="usernamefield" type="text" placeholder="Username" >
@@ -64,6 +77,52 @@
 				<fieldset class="ui-grid-b">
 					<div class="ui-block-a"><a id="signup" data-role="button">Sign Up</a></div>
 				</fieldset>
+			</div>
+			<div id="lobby" class="margin hidden">
+				<label class="fontclass1">Options</label>
+				<a id="gamebutton" data-role="button">Game Room</a>
+				<a id="rankingbutton" data-role="button">Ranking</a>
+				<a id="boardconfigbutton" data-role="button">Board Configurations</a>
+				<a id="accountbutton" data-role="button">Account</a>
+				<a id="logoutbutton" data-role="button">Log Out</a>
+			</div>
+			<div id="accountform" class="margin hidden">
+				<label class="fontclass1">Account</label>
+				<input type="text" id="emailfield" value="" placeholder="Email Address"/>
+				<input type="text" id="usernamefield" value="" placeholder="Username"/><br>
+				<input type="password" id="npasswordfield" value="" placeholder="New Password"/>
+				<input type="password" id="cpasswordfield" value="" placeholder="Confirm New Password"/>
+				<fieldset class="ui-grid-b">
+					<div class="ui-block-a"><a id="save" data-role="button">Save</a></div>
+				</fieldset>
+			</div>
+			<div id="gameroom" class="margin hidden">
+				<label class="fontclass1">Game Room</label>
+				<div id='gameroomcontents'>
+					<div data-role="navbar">
+			            <ul>
+			                <li><a style="border-radius:15px 0px 0px 15px" href="#" id='battleinvitations' data-role="button">Battle Invitations</a></li>
+			                <li><a style="border-radius:0px 15px 15px 0px" href="#" id='battlechallengers' data-role="button">Battle Challengers</a></li>
+			            </ul>
+			        </div>
+			        <br>
+					<div id="battleinvitationsform" class="hidden">
+						<button id="postbattleinvitation" class="post">Post Battle Invitation</button>
+						<br>
+						<label class="fontclass4">Battle Invitations List</label>
+						<div style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
+							<ul data-role="listview" data-inset=true data-count-theme='a' id="battleinvitationslistview">
+							</ul>
+						</div>
+					</div>
+					<div id="battlechallengersform" class="hidden">
+						<div class="fontclass4" >Battle Challengers List</div>
+						<div style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
+							<ul data-role="listview" data-inset=true data-count-theme='a' id="challengerslistview">
+							</ul>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div data-role="footer" data-position="fixed">
 				<div>

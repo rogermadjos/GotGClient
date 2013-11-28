@@ -2,6 +2,10 @@ $.ajaxSetup({
 	cache: true
 });
 
+$.expr[':'].contentIs = function(el, idx, meta) {
+    return $(el).text() === meta[3];
+};
+
 $.fn.pressEnter = function(fn) {  
 
     return this.each(function() {  
