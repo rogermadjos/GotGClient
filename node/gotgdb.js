@@ -54,9 +54,9 @@ exports.saveSocket = function(data,connection,callback) {
 	});
 };
 
-exports.getSocket = function(data,connection,callback) {
+exports.getSocket = function(user,connection,callback) {
 	var sql = "select * from sockets where userid=(select userid from users where username=?)";
-	var params = [data.opponent];
+	var params = [user];
 	connection.query(sql,params,function(err,results) {
 		if(results.length > 0) {
 			callback(results[0].socketid);
@@ -261,6 +261,21 @@ exports.getChallengers = function(opponent,connection,callback) {
 		else {
 			var response = results;
 			callback(response);
+		}
+	});
+}
+
+exports.checkBattleValid = function(data,connection,callback) {
+	var sql = "select * from challengers where opponentuserid=" +
+			"(select userid from users where username=?) and challengeruserid=" +
+			"(select userid from users where username=?)";
+	var params = [data.username,data.challenger];
+	connection.query(sql,params,function(err,results) {
+		if(results.length > 0) {
+			callback(true);
+		}
+		else {
+			callback(false);
 		}
 	});
 }

@@ -80,6 +80,41 @@ io.sockets.on('connection', function (socket) {
 			socket.emit('opponents_update',res);
 		});
 	});
+	socket.on('acceptchallenge', function (data) {
+		dbutil.checkBattleValid(data,connection,function(res) {
+			if(res) {
+				dbutil.getSocket(data.challenger,connection,function(socketid) {
+					if(socketid!=null) {
+						socket.emit('acceptchallenge_res','Success');
+						io.sockets.socket(socketid).emit('challenge_accepted',data.username);
+					}
+					else {
+						socket.emit('acceptchallenge_res','Failed');
+					}
+				});
+			}
+			else {
+				socket.emit('acceptchallenge_res','Failed');
+			}
+		});
+	});
+	socket.on('cancelchallenge', function (data) {
+		dbutil.cancelChallenge(data,connection,function(res) {
+			socket.emit('cancelchallenge_res',res);
+			dbutil.getChallengeData(data.username,connection,function(res) {
+				socket.emit('opponents_update',res);
+				if(res!="Failed") {
+					dbutil.getSocket(data.opponent,connection,function(socketid) {
+						if(socketid!=null) {
+							dbutil.getChallengers(data.opponent,connection,function(res) {
+								io.sockets.socket(socketid).emit('challengers_update',res);
+							});
+						}
+					});
+				}
+			});
+		});
+	});
 	socket.on('change', function (data) {
 		dbutil.changeAccountInfo(data,connection,function(res) {
 			socket.emit('change_res',res);

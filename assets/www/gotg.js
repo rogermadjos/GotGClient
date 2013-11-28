@@ -171,6 +171,8 @@ function init() {
 			hideComponent("lobby");
 			showComponent("loginform");
 			environment.socket.emit('logout');
+			
+			environment.socket.removeAllListeners('challenge_accepted');
 		});
 	});
 	$("#accountbutton").off('click').click(function() {
@@ -403,7 +405,6 @@ function init() {
 						title: "Challenge",
 						content: htmlV,
 						callback: function(){
-							console.log('challenge');
 							showWaitDialog({content:"Sending battle challenge . . . ."});
 							var challengeData = {
 									'username':environment.authData.username,
@@ -429,12 +430,57 @@ function init() {
 									showComponent("backbutton");
 									var opp = $(".inv").has(".usernameinfo:contentIs('"+challengeData.opponent+"')");
 									opp.attr('data-theme','b');
-									opp.find('a').mouseover();
+									opp.find('a').mouseout();
 								}
 							},function(){
 								showMessageDialog({
 									title: "Error",
 									content: "Failed to connect to server. Cannot send battle challenge.",
+									callback: function(){
+										showComponent("gameroom");
+										$("#battleinvitations").click();
+										showComponent("backbutton");
+									}
+								});
+							});
+						}
+					});
+				}
+				if(type=='b') {
+					var htmlV = "Cancel battle challenge.";
+					showConfirmDialog({
+						title: "Challenge",
+						content: htmlV,
+						callback: function(){
+							showWaitDialog({content:"Cancelling battle challenge . . . ."});
+							var challengeData = {
+									'username':environment.authData.username,
+									'password':environment.authData.password,
+									'opponent':username
+							};
+							volatileCall('cancelchallenge','cancelchallenge_res',challengeData,function(res) {
+								if(res != 'Success') {
+									showMessageDialog({
+										title: "Error",
+										content: "An error has occured while cancelling battle challenge.",
+										callback: function(){
+											showComponent("gameroom");
+											$("#battleinvitations").click();
+											showComponent("backbutton");
+										}
+									});
+								}
+								else {
+									hideComponent("waitdialog");
+									showComponent("gameroom");
+									$("#battleinvitations").click();
+									showComponent("backbutton");
+									environment.socket.emit('getbattleinvitations');
+								}
+							},function(){
+								showMessageDialog({
+									title: "Error",
+									content: "Failed to connect to server. Cannot cancel battle challenge.",
 									callback: function(){
 										showComponent("gameroom");
 										$("#battleinvitations").click();
@@ -461,6 +507,7 @@ function init() {
 				$("#postbattleinvitation").removeClass('cancel');
 			}
 		});
+		
 		environment.socket.on('challengers_update',function(challengers) {
 			gchallengers = challengers;
 			if(challengers!='Failed') {
@@ -471,15 +518,78 @@ function init() {
 				}
 				$("#challengerslistview").html(html);
 				$("#challengerslistview").listview('refresh');
+				$("body").off('click','.chal').on('click','.chal',function() {
+					var username = $(this).find(".usernameinfo").html();
+					var htmlV = "<div>Accept Challenge</div><table>" +
+					"<tr>" +
+					"<td width=100><span class='fontclass5'>Challenger</span></td>" +
+					"<td>"+username+"</td>" +
+					"</tr>" +
+					"</table>";
+					showConfirmDialog({
+						title: "Challenge",
+						content: htmlV,
+						callback: function(){
+							showWaitDialog({content:"Accepting battle challenge . . . ."});
+							var challengeData = {
+									'username':environment.authData.username,
+									'password':environment.authData.password,
+									'challenger':username
+							};
+							volatileCall('acceptchallenge','acceptchallenge_res',challengeData,function(res) {
+								if(res != 'Success') {
+									showMessageDialog({
+										title: "Error",
+										content: "An error has occured while accepting battle challenge.",
+										callback: function(){
+											showComponent("gameroom");
+											$("#battleinvitations").click();
+											showComponent("backbutton");
+										}
+									});
+								}
+								else {
+									hideComponent("waitdialog");
+									var time = 20;
+									showMessageDialog({
+										title: "Battle",
+										content: "Waiting for <span class='fontclass5'>"+username+"</span><span id='waittimer' style='margin-left:40px'>"+time+"s</span>",
+										nobutton: true
+									});
+									
+									var timeH = setInterval(function() {
+										time = time-1;
+										$("#waittimer").html(""+time+"s");
+										if(time <= 0) {
+											clearInterval(timeH);
+										}
+									},1000);
+								}
+							},function(){
+								showMessageDialog({
+									title: "Error",
+									content: "Failed to connect to server. Cannot accept battle challenge.",
+									callback: function(){
+										showComponent("gameroom");
+										$("#battleinvitations").click();
+										showComponent("backbutton");
+									}
+								});
+							});
+						}
+					});
+				});
 			}
 		});
 		environment.socket.on('opponents_update',function(opponents) {
 			gopponents = opponents;
+			var el = $(".inv[data-theme='b']").attr('data-theme','a');
+			$(".inv").find('a').mouseout();
 			if(opponents!='Failed') {
 				for(var i=0;i<opponents.length;i++) {
 					var opp = $(".inv").has(".usernameinfo:contentIs('"+opponents[i].username+"')");
 					opp.attr('data-theme','b');
-					opp.find('a').mouseover();
+					opp.find('a').mouseout();
 				}
 			}
 		});
