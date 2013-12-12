@@ -1,6 +1,8 @@
 
 var pieceImageNames = 
 [
+	"flag.png",
+	"spy.png",
 	"5-star.png",
 	"4-star.png",
 	"3-star.png",
@@ -14,279 +16,233 @@ var pieceImageNames =
 	"secondleutenant.png",
 	"sergeant.png",
 	"private.png",
-	"spy.png",
-	"flag.png"
 ];
+
+var pieceNumbers = [1,2,1,1,1,1,1,1,1,1,1,1,1,1,6];
 
 var dirImg = ["right.png","left.png","up.png","down.png"];
 
-function getInitialBattleConfig(callback) {
-	var configName = "Random";
-	var boardConfig = new Array();
-	
-	if(configName == 'Random') {
-		var coors = new Array();
-		var i = 0;
-		for(var y=1;y<=3;y++) {
-			for(var x=0;x<9;x++) {
-				coors[i] = String.fromCharCode(x+65) + y;
-				i=i+1;
-			}
-		}
-		for(var i=0;i<6;i++) {
-			var index = 18 + Math.floor(Math.random()*(8-i));
-			coors.splice(index, 1);
-		}
-		var index = 0;
-		boardConfig[index] = {
-			'rank': 14,
-			'state': 'active',
-			'position': coors.splice(Math.floor(Math.random()*coors.length), 1)[0]
-		}
-		
-		for(var i=0;i<2;i++) {
-			index = index + 1;
-			boardConfig[index] = {
-				'rank': 13,
-				'state': 'active',
-				'position': coors.splice(Math.floor(Math.random()*coors.length), 1)[0]
-			}
-			
-		}
-		
-		for(var i=0;i<6;i++) {
-			index = index + 1;
-			boardConfig[index] = {
-				'rank': 12,
-				'state': 'active',
-				'position': coors.splice(Math.floor(Math.random()*coors.length), 1)[0]
-			}
-		}
-		
-		for(var i=0;i<12;i++) {
-			index = index + 1;
-			boardConfig[index] = {
-				'rank': 11-i,
-				'state': 'active',
-				'position': coors.splice(Math.floor(Math.random()*coors.length), 1)[0]
-			}
-		}
-		
-		callback(boardConfig);
-	}
+function initGamescript() {
+//	$("#leftarrow").mousedown(function() {
+//		$(this).attr('src','images/left-active.png');
+//	});
+//
+//	$("#leftarrow").mouseup(function() {
+//		$(this).attr('src','images/left.png');
+//	})
+//
+//	$("#rightarrow").mousedown(function() {
+//		$(this).attr('src','images/right-active.png');
+//	});
+//
+//	$("#rightarrow").mouseup(function() {
+//		$(this).attr('src','images/right.png');
+//	})
 }
 
-function expiringCall(event,timeout, handler, timeoutHandler) {
-	var func = function(data) {
-		clearTimeout(tevent);
-		socket.removeListener(event,func);
-		handler(data);
+function startBCEdit(bconfig) {
+	var currentPool = 0;
+	var width = $("#boardconfigform").width();
+	var cellwidth = Math.floor(width/9);
+	var cellheight = Math.floor(width/11);
+	var index = 0;
+	var pieces = new Array();
+	var fromPool = true;
+	var lastTile = null;
+	for(var i=0;i<pieceImageNames.length;i++) {
+		for(var j=0;j<pieceNumbers[i];j++) {
+			pieces[index++] = pieceImageNames[i];
+		}
 	}
-	var tevent = setTimeout(function() {
-		socket.removeListener(event,func);
-		timeoutHandler();
-	},timeout);
-	socket.on(event,func);
-}
-
-function prepareBoard() {
-	
-	var operations = function() {
-		var selection = "";
-		
-		var enableSelection = false;
-		
-		socket.on('move',function(data) {
-			enableSelection = true;
-			$("#indicator").attr('src','images/state_green.png');
-			if(data != null) {
-				var html = $('#'+data.from).html();
-				$('#'+data.from).html('');
-				$('#'+data.to).html(html);
-			}
-		});
-		
-		var gameboard = $("#gameboard");
-		gameboard.addClass('gameboard');
-		gameboard.height($(window).height()*6/14);
-		
-		$("#gameareacon").width($(window).width() - 35);
-		
-		var pieceHeight = ($(window).height()*6/14 - 40) / 8;
-		var pieceWidth = ($(window).width() - 85) / 9;
-		
-		var html = "<table border='1'  class='gametable' style='table-layout:fixed'>";
-		for(var i=1;i<=8;i++) {
-			html += "<tr height='"+(pieceHeight+5)+"'>";
-			for(var j=1;j<=9;j++) {
-				var coor = String.fromCharCode(j+64) + (9-i);
-				html += "<td width='"+pieceWidth+"' id='"+coor+"' class='coordinate'>";
-				html += "</td>";
-			}
-			html += "</tr>";
+	$(".tile").html('');
+	var setPool = function(num) {
+		$(".highlight").remove();
+		if(num < 0) {
+			num = pieces.length-1;
 		}
-		html += "</table>";
-		gameboard.html(html);
-		
-		console.log(boardConfig);
-		
-		for(var i=0;i<boardConfig.length;i++) {
-			var container = $("#"+boardConfig[i].position);
-			var html = "<div class='piece'><img style='margin-bottom:-3px' src='images/"+pieceImageNames[boardConfig[i].rank]+"' width='"+pieceWidth+"' height='"+pieceHeight+"'><div>";
-			container.html(html);
+		if(num >= pieces.length) {
+			num = 0;
 		}
-		
-		for(var i=0;i<enemyConfig.length;i++) {
-			var container = $("#"+enemyConfig[i].position);
-			var html = "<div class='enemy'><img style='margin-bottom:-3px' src='images/enemy.png' width='"+pieceWidth+"' height='"+pieceHeight+"'><div>";
-			container.html(html);
-		}
-		
-		$('.coordinate').click(function() {
-			var position = $(this).attr('id');
-			
-			if($(this).has('.arrow').length) {
-				$(".highlight").remove();
-				$(".arrow").remove();
-				var html = $('#'+selection).html();
-				$('#'+selection).html('');
-				$(this).html(html);
+		currentPool = num;
+		$("#pool").html("<div><img class='fadein' src='images/"+pieces[num]+"' height='78px' style='margin-bottom:-3px;width: 98%;'</img></div>");
+	}
+	setPool(currentPool);
+	$("#pool").off('click').click(function() {
+		if($(this).html()!='') {
+			fromPool = true;
+			if($("#pool").has(".highlight").length == 0) {
+				$("#pool").append("<div style='margin-top:-80px' class='highlight'><img class='fadein' src='images/highlight.png' height='79px' style='margin-bottom:-3px;width: 98%;'</img></div>");
+				$("#boardconfigback .tile").each(function() {
+					if($(this).html()=='') {
+						$(this).html("<div class='highlight'><img class='fadein' src='images/highlight2.png' height='"+(cellheight-3)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+					}
+				})
 				
-				var data = {
-					'from':selection,
-					'to':position
-				}
-				
-				console.log(data);
-				
-				socket.emit('move_res',data);
-				enableSelection = false;
-				$("#indicator").attr('src','images/state_red.png');
-				return;
 			}
-			
+			$(".highlightin").remove();
+			lastTile = null;
+		}
+	});
+	$("#bceditor .tile").off('click').click(function() {
+		if($(this).has(".highlight").length > 0 && fromPool) {
+			$(this).html("<div class='piece'><img src='images/"+pieces[currentPool]+"' height="+(cellheight-3)+"><div>");
 			$(".highlight").remove();
-			$(".arrow").remove();
-			if($(this).has('.piece').length && enableSelection) {
-				
-				selection = position;
-				
-				$(this).append("<div class='highlight' style='margin-top:-"+pieceHeight+"px;height:"+pieceHeight+"px'><image src='images/highlight.png' width='"+pieceWidth+"' height='"+pieceHeight+"'/></div>");
-				var charSet = 'ABCDEFGHI';
-				var x = charSet.indexOf(position.charAt(0));
-				var y = parseInt(position.charAt(1)) - 1;
-				
- 				var vmoves = new Array();
- 				var index = 0;
- 				if(x + 1 < 9) {
- 					vmoves[index++] = "r"+charSet.charAt(x+1)+""+(y+1);
- 				}
- 				if(x-1 >= 0) {
- 					vmoves[index++] = "l"+charSet.charAt(x-1) +""+(y+1);
- 				}
- 				if(y+1 < 8) {
- 					vmoves[index++] = "u"+charSet.charAt(x) +""+(y+2);
- 				}
- 				if(y-1 >=0) {
- 					vmoves[index++] = "d"+charSet.charAt(x) +""+(y);
- 				}
- 				
- 				var dirSet = "rlud";
- 				for(var i=0;i<vmoves.length;i++) {
- 					var info = vmoves[i];
- 					var dir = info.charAt(0);
- 					dir = dirImg[dirSet.indexOf(dir)];
- 					info = info.charAt(1)+""+info.charAt(2);
- 					var tile = $("#"+info);
-  					if(!tile.has('.piece').length) {
-  						if(!tile.has('.enemy').length) {
-  							var html = "<div class='arrow'><img style='margin-bottom:-3px;margin-left:0px' src='images/"+dir+"' width='"+pieceWidth+"' height='"+pieceHeight+"'><div>";
-  	  						tile.html(html);
-  						}
-  						else {
-  							tile.append("<div class='arrow' style='margin-top:-"+pieceHeight+"px;height:"+pieceHeight+"px'><image style='margin-left:0px' src='images/"+dir+"' width='"+pieceWidth+"' height='"+pieceHeight+"'/></div>");
-  						}
-  					}
- 				}
+			pieces.splice(currentPool,1);
+			currentPool--;
+			if(pieces.length > 0) {
+				$("#boardconfigform #rightarrow").mousedown();
 			}
-
-		});
-		
-		$("#gamearea").css("display","block");
-		$("#gamearea").addClass("fadein");
-		
-	}
+			else {
+				$("#pool").html('');
+			}
+			lastTile = null;
+		}
+		else if($(this).has(".highlight").length > 0 && !fromPool) {
+			$(".highlightin").remove();
+			$(this).html(lastTile.html());
+			lastTile.html('');
+			$(".highlight").remove();
+			lastTile = null;
+		}
+		else if($(this).has("div").length > 0){
+			if(lastTile==null) {
+				fromPool = false;
+				lastTile = $(this);
+				$(".highlightin").remove();
+				$("#pool .highlight").remove();
+				$(this).append("<div class='highlightin' style='margin-top:-"+(cellheight-3)+"px'><img class='fadein' src='images/highlight.png' height='"+(cellheight-4)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+				$("#boardconfigback .tile").each(function() {
+					if($(this).html()=='') {
+						$(this).html("<div class='highlight'><img class='fadein' src='images/highlight2.png' height='"+(cellheight-3)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+					}
+				})
+			}
+			else {
+				$(".highlightin").remove();
+				$(".highlight").remove();
+				var html = lastTile.html();
+				lastTile.html($(this).html());
+				$(this).html(html);
+				lastTile = null;
+			}
+		}
+	});
+	$("#boardconfigback #save").off('click').click(function() {
+		$(".highlightin").remove();
+		$(".highlight").remove();
+		var bcname = $("#bcname").val();
+		if(bcname==null || bcname=='') {
+			showMessageDialog({
+				title: "Board Configuration",
+				content: "Name field must not be empty.",
+				callback: function(){
+					showComponent("boardconfigform");
+					showComponent("boardconfigback");
+					showComponent("backbutton");
+				}
+			});
+		}
+		else if(pieces.length > 0) {
+			showMessageDialog({
+				title: "Board Configuration",
+				content: "All pieces must be placed on the game board.",
+				callback: function(){
+					showComponent("boardconfigform");
+					showComponent("boardconfigback");
+					showComponent("backbutton");
+				}
+			});
+		}
+		else {
+			var index = 0;
+			var bc = '';
+			$("#bceditor .tile").each(function() {
+				if($(this).html()!='') {
+					var image = $(this).find("div img").attr('src').substring(7);
+					var rank = pieceImageNames.indexOf(image);
+					var rankS = '';
+					if(rank < 10) {
+						rankS = '0'+rank;
+					}
+					else {
+						rankS = '' + rank;
+					}
+					bc = bc + $(this).attr('id')+'-'+rankS+';';
+					index++;
+				}
+			})
+			var data = {
+				'bconfig':bc,
+				'name':bcname,
+				'username':environment.authData.username,
+				'password':environment.authData.password
+			}
+			showWaitDialog({content:"Saving board configuration . . . ."});
+			volatileCall('saveboardconfig','saveboardconfig_res',data,function(res) {
+				if(res != 'Success') {
+					showMessageDialog({
+						title: "Error",
+						content: "An error has occured while saving board configuration.",
+						callback: function(){
+							showComponent("boardconfigform");
+							showComponent("boardconfigback");
+							showComponent("backbutton");
+						}
+					});
+				}
+				else {
+					showMessageDialog({
+						title: "Board Configuration",
+						content: "Board configuration is saved successfully.",
+						callback: function(){
+							showComponent("boardconfigform");
+							showComponent("boardconfigback");
+							showComponent("backbutton");
+							$('#backbutton').click();
+						}
+					});
+				}
+			},function(){
+				showMessageDialog({
+					title: "Error",
+					content: "Failed to connect to server. Cannot save board configuration.",
+					callback: function(){
+						showComponent("boardconfigform");
+						showComponent("boardconfigback");
+						showComponent("backbutton");
+					}
+				});
+			});
+		}
+	})
+	$("#boardconfigform #leftarrow").off('mousedown').mousedown(function() {
+		if(pieces.length > 0) {
+			setPool(currentPool - 1);
+		}
+	});
+	$("#boardconfigform #rightarrow").off('mousedown').mousedown(function() {
+		if(pieces.length > 0) {
+			setPool(currentPool + 1);
+		}
+	});
 	
-	var func = function() {
-		getEnemyConfig(function() {
-			operations();
+	if(bconfig!=null) {
+		$("#bcname").val(bconfig.bconfigname);
+		$("#bcname").attr('readonly','readonly');
+		pieces = new Array();
+		$("#pool").html('');
+		for(var i=0;i<21;i++) {
+			var info = bconfig.bconfig.substr(i*7,6);
+			var tile = info.substr(0,3);
+			var rank = parseInt(info.substr(4,2));
+			$("#boardconfigback #"+tile).html("<div class='piece'><img src='images/"+pieceImageNames[rank]+"' height="+(cellheight-3)+"><div>");
+		}
+		$("#boardconfigback #save").off('click').click(function() {
+			
 		});
-	}
-	if(boardConfig != null) {
-		func();
 	}
 	else {
-		getInitialBattleConfig(function(data) {
-			boardConfig = data;
-			func();
-		});
+		$("#bcname").val('');
+		$("#bcname").removeAttr('readonly');
 	}
-	
-	
-}
-
-var boardConfig = null;
-var enemyConfig = null;
-
-function getEnemyConfig(callback) {
-//	var config = new Array();
-//	var index = 0;
-//	for(var i=0;i<9;i++) {
-//		config[index] = {
-//			'position': String.fromCharCode(i+65) + '8',
-//			'state': 'active'
-//		}
-//		index++;
-//	}
-//	for(var i=0;i<9;i++) {
-//		config[index] = {
-//			'position': String.fromCharCode(i+65) + '7',
-//			'state': 'active'
-//		}
-//		index++;
-//	}
-//	for(var i=0;i<3;i++) {
-//		config[index] = {
-//			'position': String.fromCharCode(i+65) + '6',
-//			'state': 'active'
-//		}
-//		index++;
-//	}
-//	enemyConfig = config;
-	
-	expiringCall('enemy_info',timeout, function(data) {
-		enemyConfig = data;
-		callback('Succeeded');
-		
-	}, function() {
-		callback('Failed');
-	})
-	
-}
-
-function startBattle(challenger,callback) {
-	getInitialBattleConfig(function(data) {
-		boardConfig = data;
-		var battleInfo = {
-				'username': authData.username,
-				'password': authData.password,
-				'challenger': challenger
-		}
-		socket.emit('prepare_battle',battleInfo);
-		expiringCall('prepare_battle_res',timeout, function(data) {
-			callback(data.response);
-		}, function() {
-			callback('Timeout');
-		})
-	});
 }

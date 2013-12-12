@@ -60,7 +60,7 @@ io.sockets.on('connection', function (socket) {
 		dbutil.challengeBattle(data,connection,function(res) {
 			socket.emit('challenge_res',res);
 			if(res=='Success') {
-				dbutil.getSocket(data,connection,function(socketid) {
+				dbutil.getSocket(data.opponent,connection,function(socketid) {
 					if(socketid!=null) {
 						dbutil.getChallengers(data.opponent,connection,function(res) {
 							io.sockets.socket(socketid).emit('challengers_update',res);
@@ -71,13 +71,38 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	socket.on('getchallengers', function (data) {
-		dbutil.getChallengers(data.username,connection,function(res) {
+		dbutil.getBCSelectionInfo(data.username,connection,function(res) {
 			socket.emit('challengers_update',res);
+		});
+	});
+	socket.on('getbcselectioninfo', function (data) {
+		dbutil.getBCSelectionInfo(data,connection,function(res) {
+			socket.emit('getbcselectioninfo_res',res);
 		});
 	});
 	socket.on('getchallengedata', function (data) {
 		dbutil.getChallengeData(data.username,connection,function(res) {
 			socket.emit('opponents_update',res);
+		});
+	});
+	socket.on('getranking', function (data) {
+		dbutil.getRanking(data,connection,function(res) {
+			socket.emit('getranking_res',res);
+		});
+	});
+	socket.on('getboardconfig', function (data) {
+		dbutil.getBoardConfig(data,connection,function(res) {
+			socket.emit('bconfigupdate',res);
+		});
+	});
+	socket.on('deleteboardconfig', function (data) {
+		dbutil.deleteBoardConfig(data,connection,function(res) {
+			socket.emit('deleteboardconfig_res',res);
+		});
+	});
+	socket.on('setbcselection', function (data) {
+		dbutil.setBCSelection(data,connection,function(res) {
+			socket.emit('setbcselection_res',res);
 		});
 	});
 	socket.on('acceptchallenge', function (data) {
@@ -98,6 +123,11 @@ io.sockets.on('connection', function (socket) {
 			}
 		});
 	});
+	socket.on('saveboardconfig', function (data) {
+		dbutil.saveBoardConfig(data,connection,function(res) {
+			socket.emit('saveboardconfig_res',res);
+		});
+	});
 	socket.on('cancelchallenge', function (data) {
 		dbutil.cancelChallenge(data,connection,function(res) {
 			socket.emit('cancelchallenge_res',res);
@@ -113,6 +143,20 @@ io.sockets.on('connection', function (socket) {
 					});
 				}
 			});
+		});
+	});
+	socket.on('denybattle', function (data) {
+		dbutil.getSocket(data.opponent,connection,function(socketid) {
+			if(socketid!=null) {
+				io.sockets.socket(socketid).emit('battledenied');
+			}
+		});
+	});
+	socket.on('engage', function (data) {
+		dbutil.getSocket(data.opponent,connection,function(socketid) {
+			if(socketid!=null) {
+				io.sockets.socket(socketid).emit('engage');
+			}
 		});
 	});
 	socket.on('change', function (data) {

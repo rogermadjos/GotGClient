@@ -67,6 +67,154 @@ exports.getSocket = function(user,connection,callback) {
 	});
 }
 
+exports.getBCSelectionInfo = function(data,connection,callback) {
+	var sql = "select bconfigid,name from bconfig where owner=(select userid from users where username=?) order by timec";
+	var params = [data.username];
+	connection.query(sql,params,function(err,res) {
+		sql = "SELECT bconfigid FROM bcselection where bcselection.userid=(select userid from users where username=?)";
+		params = [data.username];
+		connection.query(sql,params,function(err,results) {
+			var selection = -1;
+			if(results.length > 0) {
+				selection = results[0].bconfigid;
+			}
+			var data = {
+				'selection':selection,
+				'options':res
+			}
+			callback(data);
+		});
+	});
+}
+
+exports.getBoardConfig = function(bconfigid,connection,callback) {
+	var sql = "select bconfigid, bconfig from bconfig where bconfigid=?";
+	var params = [bconfigid];
+	connection.query(sql,params,function(err,res) {
+		if(err==null && res.length > 0) {
+			callback(res[0]);
+		}
+		else {
+			callback(null);
+		}
+	});
+}
+
+exports.deleteBoardConfig = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "delete from bconfig where bconfigid=?";
+			var params = [data.bconfigid];
+			connection.query(sql,params,function(err) {
+				if(err==null) {
+					callback("Success");
+				}
+				else {
+					callback("Failed");
+				}
+			});
+			
+		}
+		else {
+			callback("Failed");
+		}
+	});
+}
+
+exports.setBCSelection = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "delete from bcselection where userid=(select userid from users where username=?)";
+			var params = [data.username];
+			connection.query(sql,params,function(err,res) {
+				sql = "insert into bcselection values ((select userid from users where username=?),?)";
+				params = [data.username,data.bconfigid];
+				connection.query(sql,params,function(err,res) {
+					if(err!=null) {
+						callback('Failed');
+					}
+					else {
+						callback('Success');
+					}
+				});
+			});
+		}
+		else {
+			callback('Failed');
+		}
+	});
+}
+
+exports.saveBoardConfig = function(data,connection,callback) {
+	auth(data,connection,function(res) {
+		if(res) {
+			var sql = "insert into bconfig (owner,name,bconfig,timec) values" +
+					"((select userid from users where username=?),?,?,now())";
+			var params = [data.username,data.name,data.bconfig];
+			connection.query(sql,params,function(err) {
+				if(err==null) {
+					callback("Success");
+				}
+				else {
+					callback("Failed");
+				}
+			});
+			
+		}
+		else {
+			callback("Failed");
+		}
+	});
+}
+
+exports.getRanking = function(data,connection,callback) {
+	var grank = 0;
+	getRank(data.username,connection,function(rank) {
+		if(data.grank==null) {
+			grank = rank.grank;
+		}
+		else {
+			grank = data.grank;
+		}
+		getRankingData(grank,connection,function(ranking) {
+			var sql = "select floor((count(*)-1)/10) as maxgrank from users";
+			connection.query(sql,function(err,res) {
+				var data = {
+						'ranking':ranking,
+						'maxgrank':res[0].maxgrank
+				}
+				callback(data);
+			});
+
+		});
+	});
+}
+
+function getRankingData(grank,connection,callback) {
+	var sql = "select users.username, score,rank from (select userid,score,floor(@rank/10) " +
+			"as grank,@rank := @rank + 1 as rank from scores,(select @rank := 0) r order by score desc) " +
+			"as mrank join users on users.userid=mrank.userid where mrank.grank=? order by rank;";
+	var params = [grank];
+	connection.query(sql,params,function(err,results) {
+		callback(results);
+	});
+}
+
+function getRank(username,connection,callback) {
+	var sql = "select * from (select userid,score,floor(@rank/10) as grank,@rank := @rank + 1 as rank " +
+			"from scores,(select @rank := 0) r order by score desc) as mrank " +
+			"where mrank.userid=(select userid from users where username=?)";
+	var params = [username];
+	connection.query(sql,params,function(err,results) {
+		if(results.length > 0) {
+			callback(results[0]);
+		}
+		else {
+			callback(null);
+		}
+	});
+}
+
 exports.deleteSocket = function(socketid,connection) {
 	var sql = "delete from sockets where socketid=?";
 	var params = [socketid];
@@ -344,7 +492,6 @@ exports.cancelBattleInvitation = function(data, connection,callback) {
 			connection.query(sql,params,function(err,results) {
 				var response = 'Success';
 				callback(response);
-				console.log(err);
 			});
 		}
 		else {

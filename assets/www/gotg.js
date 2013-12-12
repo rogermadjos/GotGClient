@@ -1,8 +1,8 @@
 
 var environment = new Object();
-environment.server_url = "http://192.168.7.4:8050";
+environment.server_url = "http://COMPLAB-PC2:8050";
 environment.socket = null;
-environment.timeout = 10000;
+environment.timeout = 30000;
 environment.authData = null;
 
 $(document).ready(function() {
@@ -37,7 +37,7 @@ function init() {
 			showMessageDialog({
 				title: "Error",
 				content: "Please fill up all the fields.",
-				callback: function(){
+				callback: function() {
 					showComponent("loginform");
 				}
 			});
@@ -319,7 +319,84 @@ function init() {
 		});
 		
 	});
-	
+	$("#rankingbutton").off('click').click(function() {
+		hideComponent("lobby");
+		showComponent("backbutton");
+		showComponent("rankingboard");
+		$("#backbutton").off('click').click(function() {
+			hideComponent("rankingboard");
+			showComponent("lobby");
+			hideComponent("backbutton");
+		});
+		var maxgrank = Number.MAX_VALUE;
+		var currgrank = 0;
+		var updateranking = function(data) {
+			showWaitDialog({content:"Retrieving ranking information . . . ."});
+			volatileCall('getranking','getranking_res',data,function(res) {
+				maxgrank = res.maxgrank;
+				currgrank = Math.floor(res.ranking[0].rank/10);
+				var html = "";
+				var theme = 'a';
+				for(var i=0;i<res.ranking.length;i++) {
+					if(res.ranking[i].username==environment.authData.username) {
+						theme = 'b';
+					}
+					else {
+						theme = 'a';
+					}
+					html = html + "<li data-theme="+theme+"><table><tr><td class='fontclass5' width='40px'>"+res.ranking[i].rank+"</td><td >"+res.ranking[i].username+"</td></tr></table><span class='ui-li-count'>"+paddy(Math.round(res.ranking[i].score),6)+"</span></li>";
+				}
+				$("#rankinglistview").html(html);
+				$("#rankinglistview").listview('refresh');
+				hideComponent("waitdialog");
+				showComponent("backbutton");
+				showComponent("rankingboard");
+			},function() {
+				showMessageDialog({
+					title: "Error",
+					content: "Failed to connect to server. Cannot retrieve ranking information.",
+					callback: function(){
+						hideComponent("waitdialog");
+						showComponent("backbutton");
+						showComponent("rankingboard");
+					}
+				});
+			});
+		}
+		$("#rankhome").off('click').click(function() {
+			var data = {
+				'username':environment.authData.username
+			}
+			updateranking(data);
+		});
+		$("#rankup").off('click').click(function() {
+			if(currgrank > 0) {
+				var data = {
+						'username':environment.authData.username,
+						'grank':currgrank-1
+					}
+				updateranking(data);
+			}
+		});
+		$("#rankdown").off('click').click(function() {
+			if(currgrank < maxgrank) {
+				var data = {
+						'username':environment.authData.username,
+						'grank':currgrank+1
+					}
+				updateranking(data);
+			}
+		});
+		$("#ranktop").off('click').click(function() {
+			var data = {
+					'username':environment.authData.username,
+					'grank':0
+				}
+			updateranking(data);
+		});
+		$("#rankhome").click();
+		
+	});
 	$("#gamebutton").off('click').click(function() {
 		hideComponent("lobby");
 		showComponent('gameroom');
@@ -551,19 +628,44 @@ function init() {
 								else {
 									hideComponent("waitdialog");
 									var time = 20;
+									var timeH = setInterval(function() {
+										time = time-1;
+										$("#waittimer").html(""+time+"s");
+										if(time <= 0) {
+											clearInterval(timeH);
+											showMessageDialog({
+												title: "Battle",
+												content: "<span class='fontclass5'>"+username+"</span> has no response. Battle engagement is cancelled.",
+												callback: function() {
+													showComponent("gameroom");
+													$("#battleinvitations").click();
+													showComponent("backbutton");
+												}
+											});
+										}
+									},1000);
+									environment.socket.once('battledenied',function() {
+										clearInterval(timeH);
+										showMessageDialog({
+											title: "Battle",
+											content: "<span class='fontclass5'>"+username+"</span> has denied the battle engagement.",
+											callback: function() {
+												showComponent("gameroom");
+												$("#battleinvitations").click();
+												showComponent("backbutton");
+											}
+										});
+									});
+									environment.socket.once('engage',function() {
+										clearInterval(timeH);
+										showWaitDialog({content:"Preparing battle requirements . . . ."});
+									});
 									showMessageDialog({
 										title: "Battle",
 										content: "Waiting for <span class='fontclass5'>"+username+"</span><span id='waittimer' style='margin-left:40px'>"+time+"s</span>",
 										nobutton: true
 									});
 									
-									var timeH = setInterval(function() {
-										time = time-1;
-										$("#waittimer").html(""+time+"s");
-										if(time <= 0) {
-											clearInterval(timeH);
-										}
-									},1000);
 								}
 							},function(){
 								showMessageDialog({
@@ -630,6 +732,7 @@ function init() {
 		else {
 			showWaitDialog({content:"Cancelling battle invitation . . . ."});
 			volatileCall('cancelbattleinvitation','cancelbattleinvitation_res',environment.authData,function(res) {
+				
 				if(res != 'Success') {
 					showMessageDialog({
 						title: "Error",
@@ -661,8 +764,285 @@ function init() {
 		}
 	});
 	
+	$("#boardconfigbutton").off('click').click(function() {
+		hideComponent("lobby");
+		showComponent("boardconfigform");
+		showComponent("backbutton");
+		showComponent("boardconfigfront");
+		$("#backbutton").off('click').click(function() {
+			hideComponent("boardconfigform");
+			showComponent("lobby");
+			hideComponent("backbutton");
+			environment.socket.removeAllListeners('bconfigupdate');
+		});
+		$("#boardconfigfront #save").off('click').click(function() {
+			showWaitDialog({content:"Saving board configuration settings . . . ."});
+			var sel = -1;
+			if(bconfigdata.options[selected - 1]!=null) {
+				sel = bconfigdata.options[selected - 1].bconfigid;
+			}
+			var data = {
+					'username':environment.authData.username,
+					'password':environment.authData.password,
+					'bconfigid':sel
+			}
+			volatileCall('setbcselection','setbcselection_res',data,function(res) {
+				if(res != 'Success') {
+					showMessageDialog({
+						title: "Error",
+						content: "An error has occured while saving board configuration settings.",
+						callback: function(){
+							$("#boardconfigbutton").click();
+						}
+					});
+				}
+				else {
+					showMessageDialog({
+						title: "Board Configuration",
+						content: "Board configuration settings are save successfully.",
+						callback: function(){
+							hideComponent("waitdialog");
+							$("#backbutton").click();
+						}
+					});
+					
+				}
+			},function(){
+				showMessageDialog({
+					title: "Error",
+					content: "Failed to connect to server. Cannot cancel battle invitation.",
+					callback: function(){
+						showComponent("gameroom");
+						$("#battleinvitations").click();
+						showComponent("backbutton");
+					}
+				});
+			});
+		});
+		$("#boardconfigfront #edit").off('click').click(function() {
+			var index = $("#bcconfiglist input[name=radio-mini]:checked").attr('index');
+			if(bconfigurations[bconfigdata.options[index-1].bconfigid]!=null) {
+				hideComponent("boardconfigfront");
+				showComponent("boardconfigback");
+				var bconfig = {
+						'bconfigid':bconfigdata.options[index-1].bconfigid,
+						'bconfigname':bconfigdata.options[index-1].name,
+						'bconfig':bconfigurations[bconfigdata.options[index-1].bconfigid]
+				}
+				startBCEdit(bconfig);
+				$("#backbutton").off('click').click(function() {
+					hideComponent("boardconfigback");
+					showComponent("boardconfigfront");
+					getBCSelectionInfo();
+					$("#backbutton").off('click').click(function() {
+						hideComponent("boardconfigform");
+						showComponent("lobby");
+						hideComponent("backbutton");
+						
+					});
+				});
+			}
+		});
+		$("#boardconfigfront #delete").off('click').click(function() {
+			var index = $("#bcconfiglist input[name=radio-mini]:checked").attr('index');
+			var htmlV = "<span class='fontclass5'>"+bconfigdata.options[index-1].name+"</span> board configuration will be deleted.";
+			showConfirmDialog({
+				title: "Board Configuration",
+				content: htmlV,
+				callback: function(){
+					showWaitDialog({content:"Deleting board configuration . . . ."});
+					var data = {
+							'username':environment.authData.username,
+							'password':environment.authData.password,
+							'bconfigid':bconfigdata.options[index-1].bconfigid
+					}
+					volatileCall('deleteboardconfig','deleteboardconfig_res',data,function(res) {
+						if(res != 'Success') {
+							showMessageDialog({
+								title: "Error",
+								content: "An error has occured while deleting board configuration.",
+								callback: function(){
+									$("#boardconfigbutton").click();
+								}
+							});
+						}
+						else {
+							showMessageDialog({
+								title: "Board Configuration",
+								content: "Board configuration is deleted successfully.",
+								callback: function(){
+									hideComponent("waitdialog");
+									$("#boardconfigbutton").click();
+								}
+							});
+							
+						}
+					},function(){
+						showMessageDialog({
+							title: "Error",
+							content: "Failed to connect to server. Cannot cancel battle invitation.",
+							callback: function(){
+								showComponent("gameroom");
+								$("#battleinvitations").click();
+								showComponent("backbutton");
+							}
+						});
+					});
+				}
+			});
+		});
+
+		var width = $("#boardconfigform").width();
+		var cellwidth = Math.floor(width/9);
+		var cellheight = Math.floor(width/11);
+		var updatepreview = function(data) {
+			for(var i=0;i<21;i++) {
+				var info = data.substr(i*7,6);
+				var tile = info.substr(0,3);
+				var rank = parseInt(info.substr(4,2));
+				$("#boardconfigform #preview #"+tile).html("<div class='piece fadein'><img src='images/"+pieceImageNames[rank]+"' height="+(cellheight-3)+"><div>");
+			}
+		} ;
+		environment.socket.on('bconfigupdate',function(data) {
+			$("#boardconfigform #preview .tile").html('');
+			if(data!=null) {
+				updatepreview(data.bconfig);
+				bconfigurations[data.bconfigid] = data.bconfig;
+			}
+		});
+		$("#boardconfigfront #edit").addClass('ui-disabled');
+		$("#boardconfigfront #delete").addClass('ui-disabled');
+		var bconfigdata = new Object();
+		var lastSelectedIndex = Number.MAX_VALUE;
+		var selected = 0;
+		var bconfigurations = new Object();
+		var clearBConfiglist = function() {
+			var html = "<input type='radio' name='radio-mini' id='radio-mini-1' value='choice-1' checked='checked' index=0 />" +
+			   "<label id='choice-1-text' for='radio-mini-1'>Random</label>";
+			for(var i=0;i<6;i++) {
+				html = html + "<input type='radio' name='radio-mini' id='radio-mini-"+(i+2)+"' value='choice-"+(i+2)+"' disabled='disabled'/>" +
+				   "<label id='choice-"+(i+2)+"-text' for='radio-mini-"+(i+2)+"'>&nbsp;</label>";
+			}
+			$("#bcconfiglist").html(html);
+			$("#bcconfiglist").trigger('create');
+			$("#choice-1-text").addClass('ui-first-child');
+			$("#choice-7-text").addClass('ui-last-child');
+		}
+		var getBCSelectionInfo = function() {
+			clearBConfiglist();
+			bconfigurations = new Object();
+			environment.socket.removeAllListeners('getbcselectioninfo_res');
+			volatileCall('getbcselectioninfo','getbcselectioninfo_res',environment.authData,function(res) {
+				bconfigdata = res;
+				console.log(res.selection);
+				lastSelectedIndex = Number.MAX_VALUE;
+				var checked = "";
+				if(res.selection==-1) {
+					checked = "checked='checked'";
+				}
+				var html = "<input type='radio' name='radio-mini' id='radio-mini-1' value='choice-1' "+checked+" index=0 />" +
+						   "<label id='choice-1-text' for='radio-mini-1'>Random</label>";
+				var select = "";
+				for(var i=0;i<6;i++) {
+					if(res.options[i]!=null) {
+						html = html + "<input type='radio' name='radio-mini' id='radio-mini-"+(i+2)+"' value='choice-"+(i+2)+"' index="+(i+1)+" />" +
+						   "<label id='choice-"+(i+2)+"-text' for='radio-mini-"+(i+2)+"'>"+res.options[i].name+"</label>";
+						if(res.options[i].bconfigid==res.selection) {
+							select = 'radio-mini-'+(i+2);
+						}
+					}
+					else {
+						html = html + "<input type='radio' name='radio-mini' id='radio-mini-"+(i+2)+"' value='choice-"+(i+2)+"' disabled='disabled'/>" +
+						   "<label id='choice-"+(i+2)+"-text' for='radio-mini-"+(i+2)+"'>&nbsp;</label>";
+					}
+				}
+				$("#bcconfiglist").html(html);
+				$("#bcconfiglist").trigger('create');
+				$("#choice-1-text").addClass('ui-first-child');
+				$("#choice-7-text").addClass('ui-last-child');
+				var clickEvent = function() {
+					$("#bcconfiglist input[type=radio]").off('click');
+					
+					setTimeout(function() {
+						$("#bcconfiglist input[type=radio]").on('click',clickEvent);
+					},250);
+					var index = $(this).attr('index');
+					selected = index;
+					if(index!=lastSelectedIndex) {
+						$("#boardconfigform #preview .tile").html('');
+						if(index > 0) {
+							$("#boardconfigfront #edit").removeClass('ui-disabled');
+							$("#boardconfigfront #delete").removeClass('ui-disabled');
+							var configid = bconfigdata.options[index-1].bconfigid;
+							if(bconfigurations[configid]!=null) {
+								console.log('here');
+								updatepreview(bconfigurations[configid]);
+							}
+							else {
+								environment.socket.emit('getboardconfig',configid);
+							}
+						}
+						else {
+							$("#boardconfigfront #edit").addClass('ui-disabled');
+							$("#boardconfigfront #delete").addClass('ui-disabled');
+						}
+					}
+					lastSelectedIndex = index;
+				}
+				$("#bcconfiglist input[type=radio]").off('click').on('click',clickEvent);
+				if(select != '') {
+					$("#bcconfiglist #"+select).click().checkboxradio('refresh');
+				}
+				else {
+					$("#bcconfiglist #radio-mini-1").click().checkboxradio('refresh');
+				}
+				if(bconfigdata.options.length >= 6) {
+					$("#boardconfigfront #new").addClass('ui-disabled');
+				}
+				else {
+					$("#boardconfigfront #new").removeClass('ui-disabled');
+				}
+				
+			},function(){
+			});
+		}
+		getBCSelectionInfo();
+		$("#boardconfigform #new").off('click').click(function() {
+			hideComponent("boardconfigfront");
+			showComponent("boardconfigback");
+			startBCEdit();
+			$("#backbutton").off('click').click(function() {
+				hideComponent("boardconfigback");
+				showComponent("boardconfigfront");
+				getBCSelectionInfo();
+				$("#backbutton").off('click').click(function() {
+					hideComponent("boardconfigform");
+					showComponent("lobby");
+					hideComponent("backbutton");
+					
+				});
+			});
+		});
+
+		var html = "";
+		html +="<table border=1 cellpadding=0 style='table-layout:fixed'>";
+		for(var i=0;i<3;i++) {
+			html +="<tr height="+cellheight+">";
+			for(var j=0;j<9;j++) {
+				html +="<td class='tile' width="+cellwidth+" id="+j+"-"+i+">";
+				html +="</td>";
+			}
+			html +="</tr>";
+		}
+		html +="</table>";
+		$("#boardconfigform #preview").html(html);
+		$("#boardconfigform #bceditor").html(html);
+//		$("#0-0").html("<div><img src='images/1-star.png' height="+(cellheight-2)+"><div>");
+	});
+	
 	showWaitDialog({content:"Connecting to server . . . ."});
 	setTimeout(initConnection,200);
+	initGamescript();
 }
 
 function initConnection() {

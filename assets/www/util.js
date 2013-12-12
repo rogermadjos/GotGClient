@@ -15,6 +15,12 @@ function showMessageDialog(params) {
 	shown.removeClass("shown").addClass("hidden");
 	$("#messagedialog #title").html(params.title);
 	$("#messagedialog #content").html(params.content);
+	if(params.nobutton) {
+		$("#messagedialog #button").css('display','none');
+	}
+	else {
+		$("#messagedialog #button").css('display','block');
+	}
 	showComponent("messagedialog");
 	$("#messagedialog #button").off('click').click(function() {
 		$("#messagedialog").addClass("hidden");
@@ -37,6 +43,9 @@ function showConfirmDialog(params) {
 		shown.addClass("fadein");
 		shown.addClass("shown");
 		shown.removeClass("hidden");
+		if(params.cancelcallback!=null) {
+			params.cancelcallback();
+		}
 	});
 	$("#confirmdialog #buttonone").off('click').click(function() {
 		if(params.callback!=null) {
@@ -163,6 +172,43 @@ function login(data) {
 				hideComponent('waitdialog');
 				environment.authData = data;
 				showComponent('lobby');
+				
+				environment.socket.on('challenge_accepted',function(opponent) {
+					var time = 20;
+					var htmlV = "Challenge is accepted by "+opponent+".<span id='waittimerb' style='margin-left:40px'>"+time+"s</span>";
+					var shown = $(".shown");
+					var timeH = setInterval(function() {
+						time = time-1;
+						$("#waittimerb").html(""+time+"s");
+						if(time <= 0) {
+							clearInterval(timeH);
+							$("#confirmdialog").addClass("hidden");
+							$("#confirmdialog").removeClass("shown");
+							shown.addClass("fadein");
+							shown.addClass("shown");
+							shown.removeClass("hidden");
+						}
+					},1000);
+					var data = {
+						'username':environment.authData.username,
+						'password':environment.authData.password,
+						'opponent':opponent
+					}
+					showConfirmDialog({
+						title: "Battle",
+						content: htmlV,
+						callback: function() {
+							showWaitDialog({content:"Preparing battle requirements . . . ."});
+							environment.socket.emit('engage',data);
+							clearInterval(timeH);
+						},
+						cancelcallback: function() {
+							environment.socket.emit('denybattle',data);
+							clearInterval(timeH);
+						}
+					});
+					
+				});
 			});
 		}
 		else {

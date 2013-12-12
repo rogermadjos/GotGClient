@@ -16,8 +16,8 @@
 	</head>
 	<body>
 		<div data-role="page" id="main" data-theme="a">
-			<div data-role="content">
-				<img src="images/banner.png" id="banner">
+			<div id="banner" data-role="content">
+				<img src="images/banner.png">
 			</div>
 			<div id="waitdialog" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;" class="margin hidden">
 				<div data-role="content">
@@ -78,12 +78,26 @@
 					<div class="ui-block-a"><a id="signup" data-role="button">Sign Up</a></div>
 				</fieldset>
 			</div>
+			<div id="rankingboard" class="margin hidden">
+				<label class="fontclass1">Ranking</label>
+				<fieldset class="ui-grid-c">
+					<div class="ui-block-a"><a data-mini="true" id="ranktop" data-role="button">Top</a></div>
+					<div class="ui-block-b"><a data-mini="true" id="rankhome" data-role="button">Home</a></div>
+					<div class="ui-block-c"><a data-mini="true" id="rankup" data-role="button">Up</a></div>
+					<div class="ui-block-d"><a data-mini="true" id="rankdown" data-role="button">Down</a></div>
+				</fieldset>
+				<div style="overflow-x:hidden;overflow-y:auto;background: gray;padding: 10px;border-radius: 20px">
+					<ul data-role="listview" data-inset=true data-count-theme='a' id="rankinglistview">
+					</ul>
+				</div>
+			</div>
 			<div id="lobby" class="margin hidden">
 				<label class="fontclass1">Options</label>
 				<a id="gamebutton" data-role="button">Game Room</a>
 				<a id="rankingbutton" data-role="button">Ranking</a>
 				<a id="boardconfigbutton" data-role="button">Board Configurations</a>
 				<a id="accountbutton" data-role="button">Account</a>
+				<a id="aboutbutton" data-role="button">About</a>
 				<a id="logoutbutton" data-role="button">Log Out</a>
 			</div>
 			<div id="accountform" class="margin hidden">
@@ -95,6 +109,59 @@
 				<fieldset class="ui-grid-b">
 					<div class="ui-block-a"><a id="save" data-role="button">Save</a></div>
 				</fieldset>
+			</div>
+			<div id="boardconfigform" class="hidden margin">
+				<label class="fontclass1">Board Configurations</label><br><br>
+				<div id="boardconfigfront" class="hidden">
+					<label class="fontclass4">Select Board Configuration</label>
+				   	<fieldset data-role="controlgroup" id='bcconfiglist'>
+				    	<input type="radio" name="radio-mini" id="radio-mini-1" value="choice-1" checked="checked" />
+				    	<label id='choice-1-text' for="radio-mini-1">Random</label>
+						<input class='choix' type="radio" name="radio-mini" id="radio-mini-2" value="choice-2" disabled="disabled"/>
+				    	<label id='choice-2-text' for="radio-mini-2">&nbsp;</label>
+				    	<input class='choix' type="radio" name="radio-mini" id="radio-mini-3" value="choice-3" disabled="disabled"/>
+				    	<label id='choice-3-text' for="radio-mini-3">&nbsp;</label>
+				    	<input class='choix' type="radio" name="radio-mini" id="radio-mini-4" value="choice-4" disabled="disabled"/>
+				    	<label id='choice-4-text' for="radio-mini-4">&nbsp;</label>
+				    	<input class='choix' type="radio" name="radio-mini" id="radio-mini-5" value="choice-5" disabled="disabled"/>
+				    	<label id='choice-5-text' for="radio-mini-5">&nbsp;</label>
+				    	<input class='choix' type="radio" name="radio-mini" id="radio-mini-6" value="choice-6" disabled="disabled"/>
+				    	<label id='choice-6-text' for="radio-mini-6">&nbsp;</label>
+				    	<input class='choix' type="radio" name="radio-mini" id="radio-mini-7" value="choice-7" disabled="disabled"/>
+				    	<label id='choice-7-text' for="radio-mini-7">&nbsp;</label>
+					</fieldset><br>
+					<div id="preview"></div><br>
+					<fieldset class="ui-grid-c">
+						<div class="ui-block-a"><a id="save" data-role="button" data-mini="true">Save</a></div>
+						<div class="ui-block-b"><a id="new" data-role="button" data-mini="true">New</a></div>
+						<div class="ui-block-c"><a id="edit" data-role="button" data-mini="true">Edit</a></div>
+						<div class="ui-block-d"><a id="delete" data-role="button" data-mini="true">Delete</a></div>
+					</fieldset>
+				</div>
+				<div id="boardconfigback" class='hidden'>
+					<label class="fontclass4">Board Configuration Editor</label>
+					<input type="text" id="bcname" value="" placeholder="Name"/><br>
+					<div id="bceditor"></div><br>
+					<div style="width: 100%">
+						<div style="width: 300px" class="center">
+							<table style="width: 100%;table-layout: fixed">
+								<tr>
+									<td><img id='leftarrow' src='images/left.png' style="margin-left: auto;margin-right: 5px;display: table-cell;width: 60px;height: 60px"/></td>
+									<td>
+										<table border="1" style="margin-left: auto;margin-right: auto;table-layout: fixed">
+											<tr height="83px"><td id='pool' style='vertical-align: top' width="80px"></td></tr>
+										</table>
+									</td>
+									<td><img id='rightarrow' src='images/right.png' style="margin-right: auto;margin-left: 5px;display: table-cell;width: 60px;height: 60px"/></td>
+								</tr>
+							</table>
+						</div>
+					</div><br>
+					<fieldset class="ui-grid-b">
+						<div class="ui-block-a"></div>
+						<div class="ui-block-b"><a id="save" data-role="button" data-mini="true">Save</a></div>
+					</fieldset>
+				</div>
 			</div>
 			<div id="gameroom" class="margin hidden">
 				<label class="fontclass1">Game Room</label>

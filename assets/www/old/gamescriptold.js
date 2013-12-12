@@ -15,7 +15,7 @@ var pieceImageNames =
 	"sergeant.png",
 	"private.png",
 	"spy.png",
-	"flag.png"
+	"flag.png",
 ];
 
 var dirImg = ["right.png","left.png","up.png","down.png"];
@@ -115,7 +115,7 @@ function prepareBoard() {
 		var pieceHeight = ($(window).height()*6/14 - 40) / 8;
 		var pieceWidth = ($(window).width() - 85) / 9;
 		
-		var html = "<table border='1' class='gametable' style='table-layout:fixed;width:100%'>";
+		var html = "<table border='1'  class='gametable' style='table-layout:fixed'>";
 		for(var i=1;i<=8;i++) {
 			html += "<tr height='"+(pieceHeight+5)+"'>";
 			for(var j=1;j<=9;j++) {
