@@ -12,7 +12,7 @@ var connection = mysql.createConnection({
   database : 'gotgdb'
 });
 
-var timeout = 5000;
+var timeout = 30000;
 var refreshTime = 20000;
 
 connection.connect();
@@ -71,7 +71,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	socket.on('getchallengers', function (data) {
-		dbutil.getBCSelectionInfo(data.username,connection,function(res) {
+		dbutil.getChallengers(data.username,connection,function(res) {
 			socket.emit('challengers_update',res);
 		});
 	});
@@ -156,6 +156,12 @@ io.sockets.on('connection', function (socket) {
 		dbutil.getSocket(data.opponent,connection,function(socketid) {
 			if(socketid!=null) {
 				io.sockets.socket(socketid).emit('engage');
+				var environment = {
+						'io':io,
+						'connection':connection,
+						'dbutil':dbutil,
+				};
+				gameutil.startBattle(data.opponent,data.username,environment);
 			}
 		});
 	});

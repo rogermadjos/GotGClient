@@ -1,6 +1,6 @@
 
 var environment = new Object();
-environment.server_url = "http://COMPLAB-PC2:8050";
+environment.server_url = "http://192.168.7.3:8050";
 environment.socket = null;
 environment.timeout = 30000;
 environment.authData = null;
@@ -173,6 +173,7 @@ function init() {
 			environment.socket.emit('logout');
 			
 			environment.socket.removeAllListeners('challenge_accepted');
+			$('#username').html('');
 		});
 	});
 	$("#accountbutton").off('click').click(function() {
@@ -398,6 +399,10 @@ function init() {
 		
 	});
 	$("#gamebutton").off('click').click(function() {
+		environment.socket.removeAllListeners('battleinvitations_update');
+		environment.socket.removeAllListeners('challengers_update');
+		environment.socket.removeAllListeners('opponents_update');
+		
 		hideComponent("lobby");
 		showComponent('gameroom');
 		showComponent("backbutton");
@@ -587,6 +592,7 @@ function init() {
 		
 		environment.socket.on('challengers_update',function(challengers) {
 			gchallengers = challengers;
+			console.log(challengers);
 			if(challengers!='Failed') {
 				var html = "";
 				for(var i=0;i<challengers.length;i++) {
@@ -658,7 +664,7 @@ function init() {
 									});
 									environment.socket.once('engage',function() {
 										clearInterval(timeH);
-										showWaitDialog({content:"Preparing battle requirements . . . ."});
+										battle();
 									});
 									showMessageDialog({
 										title: "Battle",
@@ -765,6 +771,8 @@ function init() {
 	});
 	
 	$("#boardconfigbutton").off('click').click(function() {
+		environment.socket.removeAllListeners('bconfigupdate');
+		
 		hideComponent("lobby");
 		showComponent("boardconfigform");
 		showComponent("backbutton");
@@ -1029,7 +1037,7 @@ function init() {
 		for(var i=0;i<3;i++) {
 			html +="<tr height="+cellheight+">";
 			for(var j=0;j<9;j++) {
-				html +="<td class='tile' width="+cellwidth+" id="+j+"-"+i+">";
+				html +="<td class='tile' width="+cellwidth+" id="+j+"-"+(2-i)+">";
 				html +="</td>";
 			}
 			html +="</tr>";

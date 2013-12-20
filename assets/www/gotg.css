@@ -95,7 +95,7 @@ textarea:focus, input:focus{
 }
 
 .ui-page {
-    background: url(images/background.png);
+    background: url(images/background.jpg);
     background-repeat:no-repeat;
     background-size: cover; 
 }
@@ -110,6 +110,14 @@ textarea:focus, input:focus{
 	opacity: 0;
 	-webkit-animation : fadeinanim 0.15s;
 	-webkit-animation-fill-mode: both;
+}
+
+.homebase {
+	background: rgba(0, 255, 0, 0.1);
+}
+
+.battlezone {
+	background: rgba(128, 128, 128, 0.1);
 }
 
 @-webkit-keyframes fadeinanim

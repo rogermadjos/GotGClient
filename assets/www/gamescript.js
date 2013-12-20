@@ -177,6 +177,9 @@ function startBCEdit(bconfig) {
 				'username':environment.authData.username,
 				'password':environment.authData.password
 			}
+			if(bconfig!=null) {
+				data.bconfigid = bconfig.bconfigid;
+			}
 			showWaitDialog({content:"Saving board configuration . . . ."});
 			volatileCall('saveboardconfig','saveboardconfig_res',data,function(res) {
 				if(res != 'Success') {
@@ -237,12 +240,170 @@ function startBCEdit(bconfig) {
 			var rank = parseInt(info.substr(4,2));
 			$("#boardconfigback #"+tile).html("<div class='piece'><img src='images/"+pieceImageNames[rank]+"' height="+(cellheight-3)+"><div>");
 		}
-		$("#boardconfigback #save").off('click').click(function() {
-			
-		});
 	}
 	else {
 		$("#bcname").val('');
 		$("#bcname").removeAttr('readonly');
 	}
+}
+
+function battle() {
+	var turn = false;
+	showWaitDialog({content:"Preparing battle requirements . . . ."});
+	environment.socket.once('testconnect',function() {
+		environment.socket.emit('testconnect_res',environment.authData.username);
+	});
+	environment.socket.once('battlestart',function(data) {
+		environment.socket.removeAllListeners('turnsignal');
+		environment.socket.removeAllListeners('battlereport');
+		hideComponent("waitdialog");
+		var width = $(window).width();
+		var cellwidth = Math.floor(width/9);
+		var cellheight = Math.floor(width/11);
+		
+		var html = "";
+		html +="<table border=1 cellpadding=0 style='table-layout:fixed'>";
+		for(var i=0;i<8;i++) {
+			html +="<tr height="+cellheight+">";
+			var c = 'homebase';
+			if(i==3 || i==4) {
+				c = 'battlezone';
+			}
+			for(var j=0;j<9;j++) {
+				html +="<td class='tile "+c+"' width="+cellwidth+" id="+j+"-"+(7-i)+">";
+				html +="</td>";
+			}
+			html +="</tr>";
+		}
+		html +="</table>";
+		$("#gameboard").html(html);
+		
+		var bconfig = data.bconfig;
+		
+		for(var i=0;i<bconfig.length;i++) {
+			$("#gameboard #"+bconfig[i].tile).html("<div class='piece' number="+i+" ><img src='images/"+pieceImageNames[bconfig[i].rank]+"' height="+(cellheight-3)+"><div>")
+		}
+		for(var i=0;i<data.enemybconfig.length;i++) {
+			var tile = data.enemybconfig[i];
+			var x = 8-parseInt(tile.substr(0,1));
+			var y = 7-parseInt(tile.substr(2,1));
+			$("#gameboard #"+x+'-'+y).html("<div class='enemypiece'><img src='images/enemy.png' height="+(cellheight-3)+"><div>");
+		}
+		var selected = "";
+
+		$("#gameboard .tile").off('click').click(function() {
+			if(!turn) {
+				return;
+			}
+			if($(this).has(".piece").length > 0) {
+				$("#gameboard .highlight").remove();
+				$("#gameboard .arrow").remove();
+				$("#gameboard .move").remove();
+				var tile = $(this).attr('id');
+				selected = tile;
+				var x = parseInt(tile.substr(0,1));
+				var y = parseInt(tile.substr(2,1));
+				var validm = new Array();
+				var index = 0;
+				if(y+1<8) {
+					var move = new Object();
+					move.dir = 'up';
+					move.coor = x+'-'+(y+1);
+					validm[index++] = move;
+				}
+				if(y-1>=0) {
+					var move = new Object();
+					move.dir = 'down';
+					move.coor = x+'-'+(y-1);
+					validm[index++] = move;
+				}
+				if(x+1<9) {
+					var move = new Object();
+					move.dir = 'right';
+					move.coor = (x+1)+'-'+y;
+					validm[index++] = move;
+				}
+				if(x-1>=0) {
+					var move = new Object();
+					move.dir = 'left';
+					move.coor = (x-1)+'-'+y;
+					validm[index++] = move;
+				}
+				for(var i=0;i<validm.length;i++) {
+					if($("#gameboard #"+validm[i].coor).html() == '') {
+						$("#gameboard #"+validm[i].coor).html("<div class='arrow fadein' move='"+validm[i].dir+"' ><img src='images/"+validm[i].dir+".png' height="+(cellheight-3)+"><div>");
+					}
+					else if($("#gameboard #"+validm[i].coor).has(".enemypiece").length > 0) {
+						$("#gameboard #"+validm[i].coor).append("<div class='arrow fadein' move='"+validm[i].dir+"' style='margin-top:-"+(cellheight-3)+"px'><img src='images/"+validm[i].dir+".png' height='"+(cellheight-4)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+					}
+				}
+				$(this).append("<div class='highlight' style='margin-top:-"+(cellheight-3)+"px'><img class='fadein' src='images/highlight.png' height='"+(cellheight-4)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+			}
+			else if($(this).has(".arrow").length > 0) {
+				alert('arrow');
+				var tile = $(this).attr('id');
+				var data = {
+					'number':$("#gameboard #"+selected+" div").attr('number'),
+					'move':$("#"+tile+" .arrow").attr('move'),
+					'newc':tile
+				};
+				var hasengagement = $(this).has(".enemypiece").length > 0;
+				var html = $("#gameboard #"+selected).html();
+				$(this).html(html);
+				if(hasengagement) {
+					$(this).append("<div class='engagement' style='margin-top:-"+(cellheight-3)+"px'><img src='images/engagement.png' height='"+(cellheight-4)+"' style='margin-bottom:-3px;width: 98%;'</img></div>");
+				}
+				bconfig[data.number].tile = tile;
+				$("#gameboard .highlight").remove();
+				$("#gameboard .arrow").remove();
+				$("#gameboard #"+selected).html('');
+				environment.socket.emit('turnreturn',data);
+				turn = false;
+			}
+			else {
+				alert('none');
+				$("#gameboard .highlight").remove();
+				$("#gameboard .arrow").remove();
+			}
+			var tile = $(this).attr('id');
+		});
+		showComponent("battlefield");
+		environment.socket.on('turnsignal',function(data) {
+			turn = true;
+			if(data!=null) {
+				var x = 8 - parseInt(data.from.substr(0,1));
+				var y = 7 - parseInt(data.from.substr(2,1));
+				var html = $("#gameboard #"+x+"-"+y).html();
+				$("#gameboard #"+x+"-"+y).html('');
+				var trans = ['up','down','left','right'];
+				var transs = ['down','up','right','left'];
+				$("#gameboard #"+x+"-"+y).html("<div class='move fadein' ><img src='images/"+transs[trans.indexOf(data.move)]+"-move.png' height="+(cellheight-3)+"><div>");
+				x = 8 - parseInt(data.to.substr(0,1));
+				y = 7 - parseInt(data.to.substr(2,1));
+				console.log(data.result);
+				if(data.result == 'win') {
+					
+				}
+				else if(data.result == 'draw') {
+					$("#gameboard #"+x+"-"+y).html('');
+				}
+				else {
+					$("#gameboard #"+x+"-"+y).html(html);
+				}
+			}
+		});
+		environment.socket.on('battlereport',function(data) {
+			$("#gameboard .engagement").remove();
+			environment.socket.emit('battlereportack');
+			console.log(data.result);
+			if(data.result == 'lose') {
+				var tile = bconfig[data.number].tile;
+				$("#gameboard #"+tile).html("<div class='enemypiece'><img src='images/enemy.png' height="+(cellheight-3)+"><div>");
+			}
+			else if(data.result == 'draw') {
+				var tile = bconfig[data.number].tile;
+				$("#gameboard #"+tile).html("");
+			}
+		});
+	});
 }

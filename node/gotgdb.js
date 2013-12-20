@@ -148,18 +148,31 @@ exports.setBCSelection = function(data,connection,callback) {
 exports.saveBoardConfig = function(data,connection,callback) {
 	auth(data,connection,function(res) {
 		if(res) {
-			var sql = "insert into bconfig (owner,name,bconfig,timec) values" +
-					"((select userid from users where username=?),?,?,now())";
-			var params = [data.username,data.name,data.bconfig];
-			connection.query(sql,params,function(err) {
-				if(err==null) {
-					callback("Success");
-				}
-				else {
-					callback("Failed");
-				}
-			});
-			
+			if(data.bconfigid==null) {
+				var sql = "insert into bconfig (owner,name,bconfig,timec) values" +
+						"((select userid from users where username=?),?,?,now())";
+				var params = [data.username,data.name,data.bconfig];
+				connection.query(sql,params,function(err) {
+					if(err==null) {
+						callback("Success");
+					}
+					else {
+						callback("Failed");
+					}
+				});
+			}
+			else {
+				var sql = "update bconfig set bconfig=?, timec=now() where bconfigid=?";
+				var params = [data.bconfig,data.bconfigid];
+				connection.query(sql,params,function(err) {
+					if(err==null) {
+						callback("Success");
+					}
+					else {
+						callback("Failed");
+					}
+				});
+			}
 		}
 		else {
 			callback("Failed");
@@ -461,6 +474,26 @@ exports.updateBattleChallenges = function(connection,callback) {
 		if(callback!=null) {
 			callback(res.affectedRows > 0);
 		}
+	});
+}
+
+exports.getBConfig = function(username,connection,callback) {
+	var sql = "select bconfig from bconfig join bcselection on bconfig.bconfigid=bcselection.bconfigid where " +
+			"bcselection.userid=(select userid from users where username=?)";
+	var params = [username];
+	connection.query(sql,params,function(err,results) {
+		if(err == null) {
+			if(results.length > 0) {
+				callback(results[0].bconfig);
+			}
+			else {
+				callback(null);
+			}
+		}
+		else {
+			callback(null);
+		}
+		
 	});
 }
 

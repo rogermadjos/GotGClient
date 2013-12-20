@@ -19,6 +19,27 @@
 			<div id="banner" data-role="content">
 				<img src="images/banner.png">
 			</div>
+
+			<div id='battlefield' class='hidden'>
+				<div id='gameboard'>
+				</div>
+				<table style='' class='margin'>
+					<tr>
+						<td width="75" valign="middle" >
+							<img src="images/state-green.png" width="75" height="52">
+						</td>
+						<td style="width: 100%" valign="middle">
+							<div style="margin-left:10px;background: url(images/progress-bg.png);height: 35px;border-radius: 20px;overflow: hidden;">
+								<div style="background: url(images/progress.png);height: 35px;width: 50%">
+								</div>
+								<div style="margin-top: -27px;text-align: center;">
+									<span style="margin-left: auto;margin-right: auto;font-weight: bold;">20:45</span>
+								</div>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
 			<div id="waitdialog" style="background:#555555;border-radius: 30px;box-shadow: 3px 3px 3px #222222;" class="margin hidden">
 				<div data-role="content">
 					<table>
@@ -192,10 +213,19 @@
 				</div>
 			</div>
 			<div data-role="footer" data-position="fixed">
-				<div>
-					<a id="backbutton" class="hidden" data-role="button" data-icon="arrow-l" data-inline="true">Back</a>
-					<a data-role="button" data-icon="arrow-l" data-inline="true" style="visibility:hidden">Dummy</a>
-				</div>
+				<table style="width: 100%">
+					<tr>
+						<th width="200">
+							<div>
+								<a id="backbutton" class="hidden" data-role="button" data-icon="arrow-l" data-inline="true">Back</a>
+								<a data-role="button" data-icon="arrow-l" data-inline="true" style="visibility:hidden">Dummy</a>
+							</div>
+						</th>
+						<th align="right">
+							<span style="margin-right: 15px" id='username' class='fontclass5'></span>
+						</th>
+					</tr>
+				</table>
 			</div>
 		</div>
 	</body>

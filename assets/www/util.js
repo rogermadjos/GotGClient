@@ -172,7 +172,7 @@ function login(data) {
 				hideComponent('waitdialog');
 				environment.authData = data;
 				showComponent('lobby');
-				
+				$('#username').html(data.username);
 				environment.socket.on('challenge_accepted',function(opponent) {
 					var time = 20;
 					var htmlV = "Challenge is accepted by "+opponent+".<span id='waittimerb' style='margin-left:40px'>"+time+"s</span>";
@@ -198,9 +198,9 @@ function login(data) {
 						title: "Battle",
 						content: htmlV,
 						callback: function() {
-							showWaitDialog({content:"Preparing battle requirements . . . ."});
-							environment.socket.emit('engage',data);
 							clearInterval(timeH);
+							environment.socket.emit('engage',data);
+							battle();
 						},
 						cancelcallback: function() {
 							environment.socket.emit('denybattle',data);
